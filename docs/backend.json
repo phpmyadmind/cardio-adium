@@ -1,0 +1,253 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user profile for medical professionals.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user profile."
+        },
+        "name": {
+          "type": "string",
+          "description": "The full name of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "medicalId": {
+          "type": "string",
+          "description": "The medical ID of the user."
+        },
+        "city": {
+          "type": "string",
+          "description": "The city where the user is located."
+        },
+        "specialty": {
+          "type": "string",
+          "description": "The medical specialty of the user."
+        },
+        "termsAccepted": {
+          "type": "boolean",
+          "description": "Indicates whether the user has accepted the terms of service."
+        },
+        "question": {
+          "type": "string",
+          "description": "The security question presented during registration."
+        },
+        "answer": {
+          "type": "string",
+          "description": "The answer provided by the user to the security question."
+        },
+        "isAdmin": {
+            "type": "boolean",
+            "description": "Indicates whether the user has administrative privileges."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "medicalId",
+        "city",
+        "specialty",
+        "termsAccepted",
+        "question",
+        "answer"
+      ]
+    },
+    "Event": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Event",
+      "type": "object",
+      "description": "Represents an event in the agenda.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the event."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the event."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the event."
+        },
+        "startTime": {
+          "type": "string",
+          "description": "The start time of the event.",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "The end time of the event.",
+          "format": "date-time"
+        },
+        "speakerIds": {
+          "type": "array",
+          "description": "References to Speakers. (Relationship: Event N:N Speaker)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "startTime",
+        "endTime"
+      ]
+    },
+    "Speaker": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Speaker",
+      "type": "object",
+      "description": "Represents a speaker at an event.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the speaker."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the speaker."
+        },
+        "specialization": {
+          "type": "string",
+          "description": "The specialization of the speaker."
+        },
+        "bio": {
+          "type": "string",
+          "description": "A short biography of the speaker."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "specialization"
+      ]
+    },
+    "Question": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Question",
+      "type": "object",
+      "description": "Represents a question submitted by a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the question."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Question)"
+        },
+        "eventId": {
+          "type": "string",
+          "description": "Reference to Event. (Relationship: Event 1:N Question)"
+        },
+        "text": {
+          "type": "string",
+          "description": "The text of the question."
+        },
+        "submittedAt": {
+          "type": "string",
+          "description": "The date and time the question was submitted.",
+          "format": "date-time"
+        },
+        "isApproved": {
+          "type": "boolean",
+          "description": "Indicates whether the question has been approved by an admin."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "eventId",
+        "text",
+        "submittedAt",
+        "isApproved"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profiles, using path-based ownership for private data.  The 'userId' parameter corresponds to the Firebase Auth UID.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth UID of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/events/{eventId}",
+        "definition": {
+          "entityName": "Event",
+          "schema": {
+            "$ref": "#/backend/entities/Event"
+          },
+          "description": "Stores event details for the agenda.",
+          "params": [
+            {
+              "name": "eventId",
+              "description": "Unique identifier for the event."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/speakers/{speakerId}",
+        "definition": {
+          "entityName": "Speaker",
+          "schema": {
+            "$ref": "#/backend/entities/Speaker"
+          },
+          "description": "Stores speaker profiles.",
+          "params": [
+            {
+              "name": "speakerId",
+              "description": "Unique identifier for the speaker."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/questions/{questionId}",
+        "definition": {
+          "entityName": "Question",
+          "schema": {
+            "$ref": "#/backend/entities/Question"
+          },
+          "description": "Stores questions submitted by users. Includes denormalized event details and potentially user roles for authorization independence, so that security rules don't need to traverse up to the event to determine access.",
+          "params": [
+            {
+              "name": "questionId",
+              "description": "Unique identifier for the question."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to facilitate a secure and scalable CampusConnect application, focusing on simplicity and adherence to the core design principles. User profiles are stored in a path-based structure for ownership, while events, speakers, and questions are stored in collections for collaborative features. The key to authorization independence in the Q&A Management feature is the denormalization of event details, including user roles or access permissions, within the question documents themselves. This avoids the need for complex `get()` calls in Firestore rules, enabling efficient and secure data access and management. This design promotes the creation of simple, robust, and easily debuggable security rules."
+  }
+}

@@ -1,0 +1,82 @@
+/**
+ * @file Firebase Security Rules for CampusConnect application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a user-ownership model for user profiles,
+ * and a public-read with admin-write model for events, speakers and questions.
+ *
+ * Data Structure:
+ * - /users/{userId}: User profile information, accessible only by the user themselves. Admins can read any user profile.
+ * - /events/{eventId}: Event details, publicly readable but writable only by admins.
+ * - /speakers/{speakerId}: Speaker profiles, publicly readable but writable only by admins.
+ * - /questions/{questionId}: Questions submitted by users, publicly readable, writable by admins, and creatable only by authenticated users.
+ *
+ * Key Security Decisions:
+ * - Users can only access their own profiles.
+ * - Listing of user profiles is disallowed for privacy, except for admins.
+ * - Public read access is granted for events and speakers to facilitate discovery.
+ * - Admins have full write access to events, speakers, and questions.
+ *
+ * Denormalization for Authorization:
+ *  User roles (isAdmin) are stored on the user profile documents. Rules check this field to grant permissions.
+ *
+ * Structural Segregation:
+ *  None.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    /**
+     * @description Controls access to user profile documents.
+     * @path /users/{userId}
+     */
+    match /users/{userId} {
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow update: if isOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+
+    /**
+     * @description Controls access to event documents.
+     * @path /events/{eventId}
+     */
+    match /events/{eventId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+
+    /**
+     * @description Controls access to speaker documents.
+     * @path /speakers/{speakerId}
+     */
+    match /speakers/{speakerId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+
+    /**
+     * @description Controls access to question documents.
+     * @path /questions/{questionId}
+     */
+    match /questions/{questionId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+  }
+}

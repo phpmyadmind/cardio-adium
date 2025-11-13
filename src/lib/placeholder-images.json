@@ -1,0 +1,28 @@
+{
+  "placeholderImages": [
+    {
+      "id": "speaker-1",
+      "description": "Portrait of Dr. Emily Carter",
+      "imageUrl": "https://images.unsplash.com/photo-1612531385446-f7e6d131e1d0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxkb2N0b3IlMjBwb3J0cmFpdHxlbnwwfHx8fDE3NjI4MTExNDZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "doctor portrait"
+    },
+    {
+      "id": "speaker-2",
+      "description": "Portrait of Dr. Ben Hanson",
+      "imageUrl": "https://images.unsplash.com/photo-1527613426441-4da17471b66d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxtZWRpY2FsJTIwcHJvZmVzc2lvbmFsfGVufDB8fHx8MTc2Mjc4MjYzOHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "medical professional"
+    },
+    {
+      "id": "speaker-3",
+      "description": "Portrait of Dr. Olivia Chen",
+      "imageUrl": "https://images.unsplash.com/photo-1678392277306-a3f9c2c70eaa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxzY2llbnRpc3QlMjBwZXJzb258ZW58MHx8fHwxNzYyODE4ODk0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "scientist person"
+    },
+    {
+      "id": "speaker-4",
+      "description": "Portrait of Dr. Samuel Rodriguez",
+      "imageUrl": "https://images.unsplash.com/photo-1548101307-a757d5f06d27?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxkb2N0b3IlMjBzbWlsaW5nfGVufDB8fHx8MTc2Mjc1MDMzN3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "doctor smiling"
+    }
+  ]
+}
