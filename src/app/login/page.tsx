@@ -37,7 +37,6 @@ export default function LoginPage() {
     // Verificar sesión antes de mostrar el formulario de login
     const checkSession = async () => {
       // Si hay usuario autenticado, redirigir al dashboard
-      console.log(user);
       if (user) {
         router.replace("/dashboard");
         return;
