@@ -169,7 +169,7 @@ export function QaView() {
         </Card>
       </div>
 
-      <div className="lg:col-span-2">
+      <div className="lg:col-span-2" hidden>
          {showQaTitle && (
            <>
              <h2 className="text-3xl font-bold font-headline text-primary mb-2">Preguntas y Respuestas</h2>
