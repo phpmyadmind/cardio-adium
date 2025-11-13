@@ -1,9 +1,85 @@
+"use client";
+
 import { LogoHead } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthContext } from "@/contexts/auth.context";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const SESSION_STORAGE_KEY = 'campus_connect_session';
+
+// Función helper para verificar si hay sesión en localStorage
+const hasSession = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  try {
+    const sessionData = window.localStorage.getItem(SESSION_STORAGE_KEY);
+    if (sessionData) {
+      const session = JSON.parse(sessionData);
+      return !!session.userId;
+    }
+  } catch (error) {
+    return false;
+  }
+  return false;
+};
 
 export default function Home() {
+  const router = useRouter();
+  const { user, isUserLoading } = useAuthContext();
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    // Verificar sesión antes de mostrar la página principal
+    const checkSession = async () => {
+      // Si hay usuario autenticado, redirigir al dashboard
+      if (user) {
+        router.replace("/dashboard");
+        return;
+      }
+
+      // Si hay sesión en localStorage, redirigir al dashboard
+      // El contexto de autenticación se encargará de cargar el usuario
+      if (hasSession()) {
+        router.replace("/dashboard");
+        return;
+      }
+
+      // Si ya terminó de cargar y no hay usuario ni sesión, mostrar la página principal
+      if (!isUserLoading) {
+        setIsChecking(false);
+      }
+    };
+
+    checkSession();
+  }, [user, isUserLoading, router]);
+
+  // Mostrar skeleton mientras se verifica la sesión
+  if (isChecking || isUserLoading) {
+    return (
+      <div className="relative min-h-screen w-full overflow-hidden">
+        <main className="relative z-10 flex flex-col min-h-screen">
+          <div className="flex-shrink-0 pt-12 sm:pt-16 pb-8">
+            <div className="flex justify-center px-8 sm:px-12">
+              <div className="w-full max-w-sm">
+                <Skeleton className="h-32 w-full" />
+              </div>
+            </div>
+          </div>
+          <div className="flex-grow flex items-center justify-center px-8 sm:px-12">
+            <div className="w-full max-w-sm space-y-4">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Si no hay sesión, mostrar la página principal
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
 

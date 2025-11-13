@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -13,25 +13,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { Badge } from "./ui/badge";
 import { useMongoCollection } from "@/hooks/use-mongodb-collection";
-import type { Question, Speaker } from "@/lib/types";
+import type { Question } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthContext } from "@/contexts/auth.context";
-import { formatDistanceToNow } from "date-fns";
 
 const qaSchema = z.object({
-  speakerId: z.string({ required_error: "Por favor seleccione un ponente." }),
   question: z.string().min(10, {
     message: "La pregunta debe tener al menos 10 caracteres.",
   }),
@@ -49,8 +39,27 @@ export function QaView() {
   }, [user?.id]);
   
   const { data: questions, isLoading: questionsLoading, refetch } = useMongoCollection<Question>(questionsEndpoint);
-  const { data: speakers, isLoading: speakersLoading } = useMongoCollection<Speaker>('/api/speakers');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showQaTitle, setShowQaTitle] = useState(true);
+  
+  // Cargar configuración de visibilidad de la leyenda
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const response = await fetch('/api/settings?key=showQaTitle');
+        if (response.ok) {
+          const data = await response.json();
+          setShowQaTitle(data.value !== false); // Por defecto true si no existe
+        }
+      } catch (error) {
+        console.error('Error cargando configuración:', error);
+        // En caso de error, mostrar por defecto
+        setShowQaTitle(true);
+      }
+    };
+    
+    loadSettings();
+  }, []);
 
   const form = useForm<z.infer<typeof qaSchema>>({
     resolver: zodResolver(qaSchema),
@@ -66,9 +75,6 @@ export function QaView() {
       return;
     }
 
-    const speaker = speakers.find(s => s.id === data.speakerId);
-    if (!speaker) return;
-
     setIsSubmitting(true);
     try {
       const response = await fetch('/api/questions', {
@@ -80,7 +86,6 @@ export function QaView() {
           userId: user.id,
           text: data.question,
           userName: user.name,
-          speakerName: speaker.name,
           isApproved: false,
           isAnswered: false,
         }),
@@ -93,9 +98,9 @@ export function QaView() {
 
       toast({
         title: "¡Pregunta Enviada!",
-        description: "Su pregunta ha sido enviada al ponente.",
+        description: "Su pregunta ha sido enviada exitosamente.",
       });
-      form.reset({ question: '', speakerId: '' });
+      form.reset({ question: '' });
       refetch();
     } catch (error: any) {
       toast({
@@ -118,7 +123,7 @@ export function QaView() {
     submittedAt: q.submittedAt ? new Date(q.submittedAt) : new Date(),
   }));
 
-  if (questionsLoading || speakersLoading) {
+  if (questionsLoading) {
     return <div className="text-center py-8">Cargando preguntas...</div>;
   }
 
@@ -128,33 +133,11 @@ export function QaView() {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="font-headline">Hacer una Pregunta</CardTitle>
-            <CardDescription>¿Tiene una pregunta para uno de nuestros ponentes? Hágala aquí.</CardDescription>
+            <CardDescription>¿Tiene una pregunta? Hágala aquí.</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="speakerId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Ponente</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccione un ponente" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {speakers.map(speaker => (
-                            <SelectItem key={speaker.id} value={speaker.id}>{speaker.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 <FormField
                   control={form.control}
                   name="question"
@@ -187,38 +170,28 @@ export function QaView() {
       </div>
 
       <div className="lg:col-span-2">
-         <h2 className="text-3xl font-bold font-headline text-primary mb-2">Preguntas y Respuestas</h2>
-         <p className="text-muted-foreground mb-6">Consulta tus preguntas.</p>
-        <Accordion type="single" collapsible className="w-full space-y-4">
+         {showQaTitle && (
+           <>
+             <h2 className="text-3xl font-bold font-headline text-primary mb-2">Preguntas y Respuestas</h2>
+             <p className="text-muted-foreground mb-6">Consulta tus preguntas.</p>
+           </>
+         )}
+        <div className="w-full space-y-4">
           {formattedQuestions.map((q) => (
-            <AccordionItem key={q.id} value={q.id} className="bg-card border-b-0 rounded-lg shadow-sm">
-              <AccordionTrigger className="p-4 hover:no-underline">
-                <div className="flex flex-col sm:flex-row justify-between w-full sm:items-center text-left gap-2 pr-4">
-                  <p className="font-semibold">{q.question}</p>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {q.isAnswered ? (
-                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Respondida</Badge>
-                    ) : (
-                        <Badge variant="secondary">Pendiente</Badge>
-                    )}
-                  </div>
+            <div key={q.id} className="bg-card border-b-0 rounded-lg shadow-sm p-4">
+              <div className="flex flex-col sm:flex-row justify-between w-full sm:items-center text-left gap-2">
+                <p className="font-semibold">{q.question}</p>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {q.isAnswered ? (
+                      <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Respondida</Badge>
+                  ) : (
+                      <Badge variant="secondary">Pendiente</Badge>
+                  )}
                 </div>
-              </AccordionTrigger>
-              <AccordionContent className="p-4 pt-0">
-                <div className="text-muted-foreground">
-                    <p><strong>Para:</strong> {q.speakerName}</p>
-                    <p><strong>De:</strong> {q.userName}</p>
-                    <p className="text-xs mt-2">{formatDistanceToNow(q.submittedAt, { addSuffix: true })}</p>
-                    {q.isAnswered && (
-                        <p className="mt-4 p-4 bg-muted/50 rounded-md">
-                            <strong>Respuesta:</strong> Estamos preparando una respuesta detallada a esta excelente pregunta. Por favor, vuelva más tarde.
-                        </p>
-                    )}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
+              </div>
+            </div>
           ))}
-        </Accordion>
+        </div>
       </div>
     </div>
   );

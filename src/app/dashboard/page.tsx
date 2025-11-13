@@ -1,7 +1,7 @@
 "use client";
 
 import { LogoHead } from "@/components/logo";
-import { Menu } from "lucide-react";
+import { Menu, LogOut } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -9,10 +9,36 @@ import { AgendaView } from "@/components/agenda-view";
 import { SpeakersView } from "@/components/speakers-view";
 import { QaView } from "@/components/qa-view";
 import { Button } from "@/components/ui/button";
+import { useAuthContext } from "@/contexts/auth.context";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { logout } = useAuthContext();
+  const { toast } = useToast();
   const [activeView, setActiveView] = useState<"agenda" | "speakers" | "preguntas" | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = () => {
+    setIsLoggingOut(true);
+    logout();
+    toast({
+      title: "Sesión cerrada",
+      description: "Ha cerrado sesión exitosamente.",
+    });
+    router.push("/login");
+  };
 
   if (activeView) {
     return (
@@ -22,12 +48,43 @@ export default function DashboardPage() {
           <div className="flex items-center">
             <LogoHead className="w-[88px] h-[88px]" />
           </div>
-          <button 
-            onClick={() => setActiveView(null)}
-            className="p-2"
-          >
-            <Menu className="h-6 w-6 text-gray-800" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setActiveView(null)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Volver al menú"
+            >
+              <Menu className="h-6 w-6 text-gray-800" />
+            </button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button 
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Cerrar sesión"
+                  disabled={isLoggingOut}
+                >
+                  <LogOut className="h-6 w-6 text-gray-800" />
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>¿Cerrar sesión?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    ¿Está seguro de que desea cerrar su sesión? Tendrá que iniciar sesión nuevamente para acceder al dashboard.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={handleLogout}
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    Cerrar sesión
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </header>
 
         {/* Content */}
@@ -90,9 +147,34 @@ export default function DashboardPage() {
         <div className="flex items-center">
           <LogoHead className="w-[84px] h-[84px]" />
         </div>
-        <button className="p-2">
-          <Menu className="h-6 w-6 text-gray-800" />
-        </button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button 
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Cerrar sesión"
+              disabled={isLoggingOut}
+            >
+              <LogOut className="h-6 w-6 text-gray-800" />
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Cerrar sesión?</AlertDialogTitle>
+              <AlertDialogDescription>
+                ¿Está seguro de que desea cerrar su sesión? Tendrá que iniciar sesión nuevamente para acceder al dashboard.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Cerrar sesión
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </header>
 
       {/* Main Content - Buttons */}

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 
+
 // Nombre del archivo PDF
 const PDF_FILE_NAME = "Adium_Colombia_Politica_de_Privacidad.pdf";
 
@@ -19,6 +20,55 @@ export default function TermsPage() {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [width, setWidth] = useState<number | undefined>(undefined);
   const [pdfUrl, setPdfUrl] = useState<string>("");
+
+  // Inyectar estilos CSS personalizados para el PDF responsive
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const pdfStyles = `
+        .react-pdf__Page {
+          max-width: 100% !important;
+          height: auto !important;
+        }
+        
+        .react-pdf__Page__canvas {
+          max-width: 100% !important;
+          height: auto !important;
+          display: block !important;
+        }
+        
+        .react-pdf__Page__textContent {
+          max-width: 100% !important;
+        }
+        
+        .react-pdf__Page__annotations {
+          max-width: 100% !important;
+        }
+        
+        @media (max-width: 640px) {
+          .react-pdf__Page {
+            margin: 0 auto;
+          }
+          
+          .react-pdf__Page__canvas {
+            width: 100% !important;
+          }
+        }
+      `;
+
+      const styleSheet = document.createElement("style");
+      styleSheet.type = "text/css";
+      styleSheet.innerText = pdfStyles;
+      styleSheet.setAttribute('data-pdf-responsive', 'true');
+      document.head.appendChild(styleSheet);
+
+      return () => {
+        const existingStyle = document.head.querySelector('style[data-pdf-responsive]');
+        if (existingStyle) {
+          document.head.removeChild(existingStyle);
+        }
+      };
+    }
+  }, []);
 
   useEffect(() => {
     // Configurar el worker de PDF.js usando la versión correcta
@@ -70,31 +120,85 @@ export default function TermsPage() {
       // Función para calcular el ancho responsivo
       const calculateWidth = () => {
         const windowWidth = window.innerWidth;
+        const padding = 16; // Padding base
+        const sidePadding = 32; // Padding total (16px * 2)
+        
         if (windowWidth < 640) {
           // Móvil: usar el ancho completo menos padding
-          return windowWidth - 32; // 16px padding a cada lado
+          return windowWidth - sidePadding - 16; // Extra padding para móvil
         } else if (windowWidth < 768) {
           // Tablet pequeña
-          return windowWidth - 64;
+          return windowWidth - sidePadding * 2;
         } else if (windowWidth < 1024) {
           // Tablet
-          return 700;
+          return Math.min(700, windowWidth - sidePadding * 3);
+        } else if (windowWidth < 1280) {
+          // Desktop pequeño
+          return Math.min(850, windowWidth - sidePadding * 4);
         } else {
-          // Desktop
-          return 800;
+          // Desktop grande
+          return 900;
         }
       };
       
+      // Función para calcular escala automática en móvil
+      const calculateScale = () => {
+        const windowWidth = window.innerWidth;
+        if (windowWidth < 640) {
+          // En móvil, ajustar la escala para que el PDF se vea bien
+          return Math.min(1.0, (windowWidth - 64) / 595); // 595 es el ancho estándar de una página A4
+        }
+        return 1.0;
+      };
+      
       // Configurar el ancho inicial
-      setWidth(calculateWidth());
+      const initialWidth = calculateWidth();
+      setWidth(initialWidth);
+      
+      // Ajustar escala inicial si es móvil
+      if (window.innerWidth < 640) {
+        const autoScale = calculateScale();
+        if (autoScale < 1.0) {
+          setScale(autoScale);
+        }
+      }
       
       // Actualizar el ancho cuando cambie el tamaño de la ventana
       const handleResize = () => {
-        setWidth(calculateWidth());
+        const newWidth = calculateWidth();
+        setWidth(newWidth);
+        
+        // Ajustar escala automáticamente en móvil si es necesario
+        // Esto solo ajusta hacia abajo, no hacia arriba, para no interferir con zoom manual
+        if (window.innerWidth < 640) {
+          const autoScale = calculateScale();
+          setScale((prevScale) => {
+            // Solo ajustar si la escala calculada es menor que la actual
+            // Esto evita interferir con el zoom manual del usuario
+            if (autoScale < 1.0 && prevScale >= 1.0) {
+              return autoScale;
+            }
+            // Si ya está en escala reducida, mantenerla o ajustar si es necesario
+            if (autoScale < prevScale) {
+              return autoScale;
+            }
+            return prevScale;
+          });
+        }
       };
       
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
+      // Usar debounce para mejorar el rendimiento
+      let resizeTimeout: NodeJS.Timeout;
+      const debouncedResize = () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(handleResize, 150);
+      };
+      
+      window.addEventListener("resize", debouncedResize);
+      return () => {
+        window.removeEventListener("resize", debouncedResize);
+        clearTimeout(resizeTimeout);
+      };
     }
   }, []);
 
@@ -156,18 +260,18 @@ export default function TermsPage() {
         {/* Controls */}
         <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 mb-4 sm:mb-6">
           {/* Navegación de páginas */}
-          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-0">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-3 md:mb-0">
             <Button
               onClick={goToPrevPage}
               disabled={pageNumber <= 1}
               variant="outline"
               size="sm"
-              className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0"
+              className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-[36px] text-xs sm:text-sm"
             >
               <ChevronLeft className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">Anterior</span>
             </Button>
-            <span className="text-xs sm:text-sm text-gray-700 px-2 sm:px-4 whitespace-nowrap">
+            <span className="text-xs sm:text-sm text-gray-700 px-2 sm:px-4 whitespace-nowrap min-w-[80px] sm:min-w-auto text-center">
               Página {pageNumber} de {numPages || "..."}
             </span>
             <Button
@@ -175,7 +279,7 @@ export default function TermsPage() {
               disabled={pageNumber >= numPages}
               variant="outline"
               size="sm"
-              className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0"
+              className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-[36px] text-xs sm:text-sm"
             >
               <span className="hidden sm:inline">Siguiente</span>
               <ChevronRight className="h-4 w-4 sm:ml-1" />
@@ -183,35 +287,37 @@ export default function TermsPage() {
           </div>
 
           {/* Controles de zoom y descarga */}
-          <div className="flex items-center justify-center gap-2 sm:gap-3 border-t pt-3 sm:border-t-0 sm:pt-0">
-            <Button
-              onClick={zoomOut}
-              disabled={scale <= 0.5}
-              variant="outline"
-              size="sm"
-              className="min-h-[44px] sm:min-h-0"
-              aria-label="Alejar"
-            >
-              <ZoomOut className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
-            <span className="text-xs sm:text-sm text-gray-700 px-2 sm:px-3 min-w-[50px] sm:min-w-[60px] text-center font-medium">
-              {Math.round(scale * 100)}%
-            </span>
-            <Button
-              onClick={zoomIn}
-              disabled={scale >= 3.0}
-              variant="outline"
-              size="sm"
-              className="min-h-[44px] sm:min-h-0"
-              aria-label="Acercar"
-            >
-              <ZoomIn className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
+          <div className="flex items-center justify-center gap-2 sm:gap-3 border-t border-gray-200 pt-3 sm:border-t-0 sm:pt-0 sm:flex-row">
+            <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-center">
+              <Button
+                onClick={zoomOut}
+                disabled={scale <= 0.5}
+                variant="outline"
+                size="sm"
+                className="min-h-[44px] sm:min-h-[36px] w-10 sm:w-auto"
+                aria-label="Alejar"
+              >
+                <ZoomOut className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+              <span className="text-xs sm:text-sm text-gray-700 px-2 sm:px-3 min-w-[50px] sm:min-w-[60px] text-center font-medium">
+                {Math.round(scale * 100)}%
+              </span>
+              <Button
+                onClick={zoomIn}
+                disabled={scale >= 3.0}
+                variant="outline"
+                size="sm"
+                className="min-h-[44px] sm:min-h-[36px] w-10 sm:w-auto"
+                aria-label="Acercar"
+              >
+                <ZoomIn className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+            </div>
             <Button
               onClick={downloadPDF}
               variant="outline"
               size="sm"
-              className="min-h-[44px] sm:min-h-0 ml-2"
+              className="min-h-[44px] sm:min-h-[36px] flex-1 sm:flex-initial text-xs sm:text-sm"
             >
               <Download className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">Descargar</span>
@@ -220,8 +326,9 @@ export default function TermsPage() {
         </div>
 
         {/* PDF Viewer */}
-        <div className="bg-white rounded-lg shadow-md p-2 sm:p-4 lg:p-6 flex justify-center overflow-x-auto overflow-y-auto min-h-[400px] sm:min-h-[500px] lg:min-h-[600px] max-h-[calc(100vh-300px)] sm:max-h-[calc(100vh-350px)]">
-          {error ? (
+        <div className="bg-white rounded-lg shadow-md p-2 sm:p-4 lg:p-6">
+          <div className="flex justify-center overflow-x-auto overflow-y-auto min-h-[400px] sm:min-h-[500px] lg:min-h-[600px] max-h-[calc(100vh-250px)] sm:max-h-[calc(100vh-300px)] lg:max-h-[calc(100vh-350px)] -mx-2 sm:-mx-4 lg:-mx-6 px-2 sm:px-4 lg:px-6">
+            {error ? (
             <div className="flex flex-col items-center justify-center py-10 sm:py-20 px-4">
               <div className="text-red-600 mb-4 text-center">
                 <p className="font-semibold mb-2 text-sm sm:text-base">Error al cargar el documento PDF</p>
@@ -254,52 +361,59 @@ export default function TermsPage() {
               </div>
             </div>
           ) : (
-            <div className="w-full flex justify-center">
-              {pdfUrl ? (
-                <Document
-                  file={pdfUrl}
-                  onLoadSuccess={onDocumentLoadSuccess}
-                  onLoadError={onDocumentLoadError}
-                loading={
-                  <div className="flex items-center justify-center py-10 sm:py-20">
-                    <div className="text-sm sm:text-base text-gray-600">Cargando documento...</div>
-                  </div>
-                }
-                error={
-                  <div className="flex flex-col items-center justify-center py-10 sm:py-20 px-4">
-                    <div className="text-red-600 mb-4 text-center">
-                      <p className="font-semibold mb-2 text-sm sm:text-base">Error al cargar el documento</p>
-                      <p className="text-xs sm:text-sm text-gray-600">{errorMessage}</p>
-                    </div>
-                  </div>
-                }
-                options={{
-                  cMapUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version || "3.11.174"}/cmaps/`,
-                  cMapPacked: true,
-                  standardFontDataUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version || "3.11.174"}/standard_fonts/`,
-                }}
-              >
-                {numPages > 0 && (
-                  <Page
-                    pageNumber={pageNumber}
-                    scale={scale}
-                    className="shadow-lg max-w-full"
-                    renderTextLayer={true}
-                    renderAnnotationLayer={true}
-                    width={width}
-                    onRenderError={(error) => {
-                      console.error("Error al renderizar la página:", error);
+              <div className="w-full flex justify-center items-start">
+                {pdfUrl ? (
+                  <Document
+                    file={pdfUrl}
+                    onLoadSuccess={onDocumentLoadSuccess}
+                    onLoadError={onDocumentLoadError}
+                    loading={
+                      <div className="flex items-center justify-center py-10 sm:py-20">
+                        <div className="text-sm sm:text-base text-gray-600">Cargando documento...</div>
+                      </div>
+                    }
+                    error={
+                      <div className="flex flex-col items-center justify-center py-10 sm:py-20 px-4">
+                        <div className="text-red-600 mb-4 text-center">
+                          <p className="font-semibold mb-2 text-sm sm:text-base">Error al cargar el documento</p>
+                          <p className="text-xs sm:text-sm text-gray-600">{errorMessage}</p>
+                        </div>
+                      </div>
+                    }
+                    options={{
+                      cMapUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version || "3.11.174"}/cmaps/`,
+                      cMapPacked: true,
+                      standardFontDataUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version || "3.11.174"}/standard_fonts/`,
                     }}
-                  />
+                  >
+                    {numPages > 0 && (
+                      <div className="flex justify-center">
+                        <Page
+                          pageNumber={pageNumber}
+                          scale={scale}
+                          className="shadow-lg"
+                          renderTextLayer={true}
+                          renderAnnotationLayer={true}
+                          width={width}
+                          onRenderError={(error) => {
+                            console.error("Error al renderizar la página:", error);
+                          }}
+                          style={{
+                            maxWidth: '100%',
+                            height: 'auto',
+                          }}
+                        />
+                      </div>
+                    )}
+                  </Document>
+                ) : (
+                  <div className="flex items-center justify-center py-10 sm:py-20">
+                    <div className="text-sm sm:text-base text-gray-600">Preparando documento...</div>
+                  </div>
                 )}
-                </Document>
-              ) : (
-                <div className="flex items-center justify-center py-10 sm:py-20">
-                  <div className="text-sm sm:text-base text-gray-600">Preparando documento...</div>
-                </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Footer Navigation */}
