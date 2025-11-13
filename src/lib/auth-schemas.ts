@@ -9,9 +9,6 @@ export const userLoginSchema = z.object({
   identifier: z.string().min(1, { 
     message: "Por favor ingrese un correo electrónico o número de identificación." 
   }),
-  terms: z.boolean().refine(val => val === true, { 
-    message: "Debe aceptar los términos y condiciones para iniciar sesión." 
-  }),
 });
 
 export type UserLoginFormValues = z.infer<typeof userLoginSchema>;

@@ -211,7 +211,7 @@ export function AdminRegisterForm() {
                 <p className="text-sm text-muted-foreground">
                   He leído y acepto la{" "}
                   <a
-                    href="/Adium_Colombia_Política_de_Privacidad.pdf"
+                    href="/terms"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[#2E61FA] hover:underline font-medium"

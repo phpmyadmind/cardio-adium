@@ -125,8 +125,7 @@ export function RegistrationForm() {
           {/* Registro Button at top */}
           <Button 
             type="button"
-            className="w-full h-16 sm:h-20 text-lg sm:text-xl font-bold rounded-xl bg-[#FD0233] hover:bg-[#d00707] text-white shadow-md mb-6"
-            disabled
+            className="w-full h-16 sm:h-20 text-lg sm:text-xl font-bold rounded-xl bg-[#FD0233] hover:bg-[#FD0233] text-white shadow-md mb-6"           
           >
             Registro
           </Button>
@@ -267,7 +266,7 @@ export function RegistrationForm() {
                   <p className="text-sm text-[#FD0233]">
                     He leído y acepto la{" "}
                     <a
-                      href="/Adium_Colombia_Política_de_Privacidad.pdf"
+                      href="/terms"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:underline font-medium"

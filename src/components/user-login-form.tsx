@@ -15,7 +15,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -34,7 +33,6 @@ export function UserLoginForm() {
     resolver: zodResolver(userLoginSchema),
     defaultValues: {
       identifier: "",
-      terms: false,
     },
   });
 
@@ -42,7 +40,7 @@ export function UserLoginForm() {
     setIsSubmitting(true);
     setFormError(null);
     try {
-      const result = await authenticateUser(firestore, data.identifier);
+      const result = await authenticateUser(data.identifier);
       
       if (result.success && result.user) {
         // Iniciar sesión en el contexto
@@ -102,41 +100,6 @@ export function UserLoginForm() {
                 />
               </FormControl>
               <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="terms"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  className="border-[#4267B2] data-[state=checked]:bg-[#4267B2]"
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel className="text-gray-700 font-normal cursor-pointer">
-                  Aceptar términos y condiciones
-                </FormLabel>
-                <p className="text-sm text-muted-foreground">
-                  He leído y acepto la{" "}
-                  <a
-                    href="/Adium_Colombia_Política_de_Privacidad.pdf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#2E61FA] hover:underline font-medium"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Política de Privacidad
-                  </a>
-                  .
-                </p>
-                <FormMessage />
-              </div>
             </FormItem>
           )}
         />
