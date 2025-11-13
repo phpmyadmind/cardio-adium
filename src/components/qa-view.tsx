@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -40,7 +40,15 @@ const qaSchema = z.object({
 export function QaView() {
   const { user } = useAuthContext();
   const { toast } = useToast();
-  const { data: questions, isLoading: questionsLoading, refetch } = useMongoCollection<Question>('/api/questions');
+  
+  // Construir endpoint con filtro de userId si el usuario está autenticado
+  const questionsEndpoint = useMemo(() => {
+    return user 
+      ? `/api/questions?userId=${encodeURIComponent(user.id)}`
+      : '/api/questions';
+  }, [user?.id]);
+  
+  const { data: questions, isLoading: questionsLoading, refetch } = useMongoCollection<Question>(questionsEndpoint);
   const { data: speakers, isLoading: speakersLoading } = useMongoCollection<Speaker>('/api/speakers');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -180,7 +188,7 @@ export function QaView() {
 
       <div className="lg:col-span-2">
          <h2 className="text-3xl font-bold font-headline text-primary mb-2">Preguntas y Respuestas</h2>
-         <p className="text-muted-foreground mb-6">Vea qué están preguntando otros.</p>
+         <p className="text-muted-foreground mb-6">Consulta tus preguntas.</p>
         <Accordion type="single" collapsible className="w-full space-y-4">
           {formattedQuestions.map((q) => (
             <AccordionItem key={q.id} value={q.id} className="bg-card border-b-0 rounded-lg shadow-sm">

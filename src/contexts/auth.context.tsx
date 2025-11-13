@@ -15,6 +15,7 @@ interface AuthContextState {
 const AuthContext = createContext<AuthContextState | undefined>(undefined);
 
 const SESSION_STORAGE_KEY = 'campus_connect_session';
+const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 días en milisegundos
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -42,6 +43,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
           try {
             const session = JSON.parse(sessionData);
             const userId = session.userId;
+            const timestamp = session.timestamp;
+            
+            // Verificar si la sesión ha expirado (30 días)
+            if (timestamp && Date.now() - timestamp > SESSION_DURATION) {
+              window.localStorage.removeItem(SESSION_STORAGE_KEY);
+              setUser(null);
+              setIsUserLoading(false);
+              return;
+            }
             
             if (userId) {
               // Verificar que el usuario aún existe en MongoDB
