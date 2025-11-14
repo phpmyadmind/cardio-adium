@@ -1,11 +1,10 @@
 "use client";
 
 import { LogoHead } from "@/components/logo";
-import { LogOut } from "lucide-react";
+import { Menu, LogOut } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { AgendaView } from "@/components/agenda-view";
 import { useAuthContext } from "@/contexts/auth.context";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -19,8 +18,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useState } from "react";
 
-export default function DashboardPage() {
+export default function AgendaPage() {
   const router = useRouter();
   const { logout } = useAuthContext();
   const { toast } = useToast();
@@ -41,66 +41,50 @@ export default function DashboardPage() {
       {/* Header */}
       <header className="w-full px-6 sm:px-8 py-4 flex items-center justify-between relative z-10">
         <div className="flex items-center">
-          <LogoHead className="w-[84px] h-[84px]" />
+          <LogoHead className="w-[88px] h-[88px]" />
         </div>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <button 
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Cerrar sesión"
-              disabled={isLoggingOut}
-            >
-              <LogOut className="h-6 w-6 text-gray-800" />
-            </button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>¿Cerrar sesión?</AlertDialogTitle>
-              <AlertDialogDescription>
-                ¿Está seguro de que desea cerrar su sesión? Tendrá que iniciar sesión nuevamente para acceder al dashboard.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700"
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => router.push('/dashboard')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Volver al menú"
+          >
+            <Menu className="h-6 w-6 text-gray-800" />
+          </button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button 
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Cerrar sesión"
+                disabled={isLoggingOut}
               >
-                Cerrar sesión
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+                <LogOut className="h-6 w-6 text-gray-800" />
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>¿Cerrar sesión?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  ¿Está seguro de que desea cerrar su sesión? Tendrá que iniciar sesión nuevamente para acceder al dashboard.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={handleLogout}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Cerrar sesión
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </header>
 
-      {/* Main Content - Buttons */}
-      <main className="flex-grow flex flex-col items-center justify-center px-4 sm:px-6 md:px-8 py-8 relative z-10">
-        <div className="w-full max-w-sm space-y-4">
-          <Button 
-            onClick={() => router.push('/dashboard/agenda')}
-            className="w-full h-16 sm:h-20 text-lg sm:text-xl font-bold rounded-xl bg-[#FD0233] hover:bg-[#d00707] text-white shadow-md"
-          >
-            AGENDA
-          </Button>
-          <Button 
-            onClick={() => router.push('/dashboard/speakers')}
-            className="w-full h-16 sm:h-20 text-lg sm:text-xl font-bold rounded-xl bg-[#2E61FA] hover:bg-[#365899] text-white shadow-md"
-          >
-            SPEAKERS
-          </Button>
-          <Button 
-            onClick={() => router.push('/dashboard/preguntas')}
-            className="w-full h-16 sm:h-20 text-lg sm:text-xl font-bold rounded-xl bg-[#2E61FA] hover:bg-[#365899] text-white shadow-md"
-          >
-            PREGUNTAS
-          </Button>
-          <Button 
-            onClick={() => router.push('/dashboard/profile')}
-            className="w-full h-16 sm:h-20 text-lg sm:text-xl font-bold rounded-xl bg-[#2E61FA] hover:bg-[#365899] text-white shadow-md"
-          >
-            MI PERFIL
-          </Button>
-        </div>
+      {/* Content */}
+      <main className="flex-grow px-4 sm:px-6 md:px-8 py-8 relative z-10">
+        <AgendaView />
       </main>
 
       {/* Heart and ECG Section - Bottom */}
@@ -136,7 +120,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Footer - Disclaimer */}
+      {/* Footer */}
       <footer className="flex-shrink-0 w-full px-4 sm:px-6 pb-6 sm:pb-8 relative z-10">
         <div className="max-w-4xl mx-auto text-center text-gray-600 text-[10px] sm:text-xs leading-tight">
           <p>
@@ -148,3 +132,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

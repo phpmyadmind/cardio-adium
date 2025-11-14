@@ -15,11 +15,11 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "./ui/badge";
 import { useMongoCollection } from "@/hooks/use-mongodb-collection";
 import type { Question } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthContext } from "@/contexts/auth.context";
+import { QRCodeViewer } from "./qr-code-viewer";
 
 const qaSchema = z.object({
   question: z.string().min(10, {
@@ -38,7 +38,7 @@ export function QaView() {
       : '/api/questions';
   }, [user?.id]);
   
-  const { data: questions, isLoading: questionsLoading, refetch } = useMongoCollection<Question>(questionsEndpoint);
+  const { refetch } = useMongoCollection<Question>(questionsEndpoint);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showQaTitle, setShowQaTitle] = useState(true);
   
@@ -113,23 +113,21 @@ export function QaView() {
     }
   }
 
-  // Convertir preguntas de MongoDB a formato Question
-  const formattedQuestions: Question[] = questions.map(q => ({
-    id: q.id,
-    userName: q.userName || 'Usuario',
-    speakerName: q.speakerName || '',
-    question: q.text,
-    isAnswered: q.isAnswered || false,
-    submittedAt: q.submittedAt ? new Date(q.submittedAt) : new Date(),
-  }));
-
-  if (questionsLoading) {
-    return <div className="text-center py-8">Cargando preguntas...</div>;
-  }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-1">
+    <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="w-full max-w-2xl">
+        <div className="flex items-center justify-between mb-6">
+          {showQaTitle && (
+            <div>
+              <h2 className="text-3xl font-bold font-headline text-primary mb-2">Hacer una Pregunta</h2>
+              <p className="text-muted-foreground">¿Tiene una pregunta? Hágala aquí.</p>
+            </div>
+          )}
+          <div className="flex-shrink-0 ml-auto">
+            <QRCodeViewer viewName="preguntas" label="Preguntas" />
+          </div>
+        </div>
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="font-headline">Hacer una Pregunta</CardTitle>
@@ -148,7 +146,7 @@ export function QaView() {
                         <Textarea
                           placeholder="Escriba su pregunta..."
                           className="resize-none"
-                          rows={5}
+                          rows={8}
                           {...field}
                         />
                       </FormControl>
@@ -167,31 +165,6 @@ export function QaView() {
             </Form>
           </CardContent>
         </Card>
-      </div>
-
-      <div className="lg:col-span-2" hidden>
-         {showQaTitle && (
-           <>
-             <h2 className="text-3xl font-bold font-headline text-primary mb-2">Preguntas y Respuestas</h2>
-             <p className="text-muted-foreground mb-6">Consulta tus preguntas.</p>
-           </>
-         )}
-        <div className="w-full space-y-4">
-          {formattedQuestions.map((q) => (
-            <div key={q.id} className="bg-card border-b-0 rounded-lg shadow-sm p-4">
-              <div className="flex flex-col sm:flex-row justify-between w-full sm:items-center text-left gap-2">
-                <p className="font-semibold">{q.question}</p>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {q.isAnswered ? (
-                      <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Respondida</Badge>
-                  ) : (
-                      <Badge variant="secondary">Pendiente</Badge>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

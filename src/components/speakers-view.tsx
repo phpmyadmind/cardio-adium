@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useMongoCollection } from "@/hooks/use-mongodb-collection";
 import type { Speaker } from "@/lib/types";
 import { Card, CardContent } from "./ui/card";
+import { QRCodeViewer } from "./qr-code-viewer";
 
 export function SpeakersView() {
   const { data: speakers, isLoading } = useMongoCollection<Speaker>('/api/speakers');
@@ -18,14 +19,20 @@ export function SpeakersView() {
   return (
     <div className="space-y-8">
       <div className="flex flex-col items-center mb-6 text-center">
-        <Image
-          src="/LOGO_123.png"
-          alt="Campus 123 Logo"
-          width={400}
-          height={200}
-          className="w-full max-w-md h-auto mb-4"
-          priority
-        />
+        <div className="flex items-center justify-between w-full mb-4">
+          <div className="flex-1"></div>
+          <Image
+            src="/LOGO_123.png"
+            alt="Campus 123 Logo"
+            width={400}
+            height={200}
+            className="w-full max-w-md h-auto"
+            priority
+          />
+          <div className="flex-1 flex justify-end">
+            <QRCodeViewer viewName="speakers" label="Speakers" />
+          </div>
+        </div>
         <h2 className="text-3xl font-bold font-headline text-primary">Ponentes Destacados</h2>
         <p className="text-muted-foreground mt-1 text-center">Conozca a los expertos que compartirán su conocimiento.</p>
       </div>

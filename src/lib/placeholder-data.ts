@@ -76,6 +76,17 @@ export const speakers: Speaker[] = [
       'Pertenencia a Sociedades Científicas (ACE, ACMI, SCC, EAS)'
     ],
   },
+  {
+    id: '6',
+    name: 'Dra. Etna Liliana Valenzuela',
+    specialty: 'Cardiología',
+    bio: 'Especialista en Cardiología',
+    imageUrl: '/speaker-etna-liliana.png',
+    imageHint: 'Dra. Etna Liliana Valenzuela',
+    qualifications: [
+      'Especialista en Cardiología',
+    ],
+  },
 ];
 
 export const agendaItems: AgendaItem[] = [
@@ -86,8 +97,7 @@ export const agendaItems: AgendaItem[] = [
     startTime: '08:00',
     endTime: '08:10',
     topic: 'Bienvenida',
-    speakerIds: ['1'],
-    participants: ['Dra. Etna Liliana Valenzuela'],
+    speakerIds: ['1','6'],
     type: 'welcome',
     location: 'Hotel Hilton Cartagena de Indias',
   },
@@ -479,10 +489,10 @@ export const agendaItems: AgendaItem[] = [
     date: '2025-11-15',
     startTime: '19:30',
     endTime: '22:00',
-    topic: 'Cena libre: Restaurante Las Chivas',
+    topic: 'Cena libre: Restaurante Los Jardines',
     speakerIds: [],
     type: 'meal',
-    location: 'Restaurante Las Chivas (Hotel Hilton)',
+    location: 'Restaurante Los Jardines (Hotel Hilton)',
   },
 ];
 

@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { agendaItems, speakers } from "@/lib/placeholder-data";
 import type { Speaker, AgendaItem } from "@/lib/types";
 import { Clock, Calendar, Download, Coffee, UtensilsCrossed, Users, MessageSquare } from "lucide-react";
+import { QRCodeViewer } from "./qr-code-viewer";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { Button } from "./ui/button";
@@ -107,7 +108,8 @@ export function AgendaView() {
           priority
         />
       </div>
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <QRCodeViewer viewName="agenda" label="Agenda" />
         <Button 
           onClick={handleDownload}
           className="h-12 text-base font-bold rounded-xl bg-[#2E61FA] hover:bg-[#365899] text-white shadow-md px-6"
@@ -204,7 +206,7 @@ export function AgendaView() {
                           </div>
 
                           {/* Conferencistas */}
-                          {(item.speakerIds.length > 0 || item.moderator || item.participants) && (
+                          {(item.speakerIds.length > 0 || item.participants) && (
                             <div className="mb-2">
                               <p className={`text-sm font-semibold mb-2 ${item.type === 'welcome' ? 'text-black' : 'text-gray-700'}`}>Conferencista(s):</p>
                               <div className="flex flex-wrap gap-3 items-center">
@@ -235,22 +237,6 @@ export function AgendaView() {
                                     <span className={`text-sm font-medium ${item.type === 'welcome' ? 'text-black' : 'text-gray-800'}`}>{participantName}</span>
                                   </div>
                                 ))}
-                                {/* Moderador si no está en la lista de speakers ni en participants */}
-                                {item.moderator && !item.speakerIds.some(id => {
-                                  const speaker = getSpeaker(id);
-                                  return speaker?.name === item.moderator;
-                                }) && !item.participants?.includes(item.moderator) && (
-                                  <div className="flex items-center gap-2">
-                                    <Avatar className="h-10 w-10">
-                                      <AvatarImage
-                                        src={speakers.find(s => s.name === item.moderator)?.imageUrl || ''}
-                                        alt={item.moderator}
-                                      />
-                                      <AvatarFallback className="text-xs">{item.moderator.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <span className={`text-sm font-medium ${item.type === 'welcome' ? 'text-black' : 'text-gray-800'}`}>{item.moderator}</span>
-                                  </div>
-                                )}
                               </div>
                             </div>
                           )}
