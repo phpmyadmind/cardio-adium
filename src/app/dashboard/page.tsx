@@ -3,7 +3,7 @@
 import { LogoHead } from "@/components/logo";
 import { LogOut } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/contexts/auth.context";
@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const { logout } = useAuthContext();
   const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [hasSurveys, setHasSurveys] = useState(false);
 
   const handleLogout = () => {
     setIsLoggingOut(true);
@@ -35,6 +36,34 @@ export default function DashboardPage() {
     });
     router.push("/login");
   };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const checkSurveysAvailability = async () => {
+      try {
+        const response = await fetch("/api/survey-questions?enabled=true");
+        if (!response.ok) {
+          throw new Error("Error al verificar encuestas");
+        }
+        const result = await response.json();
+        const questions = Array.isArray(result) ? result : [result];
+        if (isMounted) {
+          setHasSurveys(questions.length > 0);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setHasSurveys(false);
+        }
+      }
+    };
+
+    checkSurveysAvailability();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden flex flex-col">
@@ -94,6 +123,14 @@ export default function DashboardPage() {
           >
             PREGUNTAS
           </Button>
+          {hasSurveys && (
+            <Button
+              onClick={() => router.push('/dashboard/encuestas')}
+              className="w-full h-16 sm:h-20 text-lg sm:text-xl font-bold rounded-xl bg-[#2E61FA] hover:bg-[#365899] text-white shadow-md"
+            >
+              ENCUESTAS
+            </Button>
+          )}
           <Button 
             onClick={() => router.push('/dashboard/profile')}
             className="w-full h-16 sm:h-20 text-lg sm:text-xl font-bold rounded-xl bg-[#2E61FA] hover:bg-[#365899] text-white shadow-md"

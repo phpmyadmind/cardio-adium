@@ -41,3 +41,74 @@ export interface Question {
   isAnswered: boolean;
   submittedAt: Date;
 }
+
+export interface RatingDistributionEntry {
+  count: number;
+  percentage: number;
+}
+
+export interface SurveyRatingBlock {
+  ratings_distribution: Record<string, RatingDistributionEntry>;
+  average_rating: number;
+  total_votes: number;
+  max_rating: number;
+  nps_categories?: Record<string, RatingDistributionEntry>;
+}
+
+export interface SurveyConferenceRating extends SurveyRatingBlock {
+  specialty?: string;
+}
+
+export interface SurveyDayData {
+  date: string;
+  response_count: number;
+  conference_ratings?: Record<string, SurveyConferenceRating>;
+  recommendation_likelihood?: SurveyRatingBlock;
+  practical_spaces_rating?: SurveyRatingBlock;
+  incremental_learning?: SurveyRatingBlock;
+  campus_feedback?: {
+    would_participate_again: {
+      yes: RatingDistributionEntry;
+      no: RatingDistributionEntry;
+      total_votes: number;
+    };
+    suggested_topics: {
+      topics_list: string[];
+      topics_frequency: Record<string, number>;
+      total_suggestions: number;
+    };
+  };
+  pre_event_info_rating?: SurveyRatingBlock;
+  logistics_rating?: SurveyRatingBlock;
+  agenda_compliance_rating?: SurveyRatingBlock;
+}
+
+export interface SurveyData {
+  survey_metadata: {
+    event_name: string;
+    survey_version: string;
+    total_days: number;
+    days_dates: Record<string, string>;
+    total_respondents: number;
+  };
+  daily_responses: Record<string, SurveyDayData>;
+  analytics_metrics: {
+    day_1_metrics?: Record<string, number>;
+    day_2_metrics?: Record<string, number>;
+    overall_metrics?: Record<string, number>;
+  };
+  timestamp: {
+    created_at: string;
+    updated_at: string;
+  };
+}
+
+export interface Survey {
+  id: string;
+  title: string;
+  description?: string;
+  isEnabled: boolean;
+  surveyData: SurveyData;
+  createdAt?: string;
+  updatedAt?: string;
+}

@@ -1,0 +1,204 @@
+[
+  {
+    "survey_id": "cardio_event_2025",
+    "day": 1,
+    "date": "2025-11-14",
+    "question_number": 1,
+    "question_type": "conference_rating",
+    "question_text": "¿Cómo calificaría la calidad de las conferencias y conferencistas del día de hoy (claridad, contenido, utilidad) que se presentaron durante este primer día académico?",
+    "scale": {
+      "min": 1,
+      "max": 10,
+      "min_label": "Calidad baja",
+      "max_label": "Calidad alta"
+    },
+    "speakers": [
+      {
+        "name": "Dr. Ángel García",
+        "specialty": "Cardiólogo"
+      },
+      {
+        "name": "Dra. Laura Duque",
+        "specialty": "Cardióloga"
+      },
+      {
+        "name": "Dr. Germán Camilo Giraldo",
+        "specialty": "Cardiólogo"
+      }
+    ],
+    "isEnabled": true
+  },
+  {
+    "survey_id": "cardio_event_2025",
+    "day": 1,
+    "date": "2025-11-14",
+    "question_number": 2,
+    "question_type": "practical_spaces",
+    "question_text": "En cuanto a los espacios prácticos de la agenda el día de hoy, ¿Cómo valorarías su utilidad y aplicación en la práctica clínica diaria?",
+    "scale": {
+      "min": 1,
+      "max": 10,
+      "min_label": "Nada aplicable",
+      "max_label": "Muy aplicable"
+    },
+    "isEnabled": true
+  },
+  {
+    "survey_id": "cardio_event_2025",
+    "day": 1,
+    "date": "2025-11-14",
+    "question_number": 3,
+    "question_type": "incremental_learning",
+    "question_text": "¿Considera que contenidos aprendidos el día de hoy le proporcionaron un aprendizaje incremental para su práctica clínica diaria?",
+    "scale": {
+      "min": 1,
+      "max": 5,
+      "min_label": "Ningún conocimiento incremental",
+      "max_label": "Conocimiento incremental significativo"
+    },
+    "isEnabled": true
+  },
+  {
+    "survey_id": "cardio_event_2025",
+    "day": 2,
+    "date": "2025-11-15",
+    "question_number": 1,
+    "question_type": "recommendation_likelihood",
+    "question_text": "En una escala del 1 al 10, ¿qué tan probable es que recomiende este evento a un colega?",
+    "scale": {
+      "min": 1,
+      "max": 10,
+      "min_label": "Muy improbable",
+      "max_label": "Muy probable"
+    },
+    "isEnabled": true
+  },
+  {
+    "survey_id": "cardio_event_2025",
+    "day": 2,
+    "date": "2025-11-15",
+    "question_number": 2,
+    "question_type": "conference_rating",
+    "question_text": "¿Cómo calificaría la calidad de las conferencias y conferencistas del día de hoy (claridad, contenido, utilidad) que se presentaron durante este segundo día académico?",
+    "scale": {
+      "min": 1,
+      "max": 10,
+      "min_label": "Calidad baja",
+      "max_label": "Calidad alta"
+    },
+    "speakers": [
+      {
+        "name": "Dr. Ángel García",
+        "specialty": "Cardiólogo"
+      },
+      {
+        "name": "Dra. Laura Duque",
+        "specialty": "Cardióloga"
+      },
+      {
+        "name": "Dr. Germán Camilo Giraldo",
+        "specialty": "Cardiólogo"
+      },
+      {
+        "name": "Dra. Claudia Monsalve",
+        "specialty": "Endocrinóloga"
+      },
+      {
+        "name": "Dr. Javier Arango",
+        "specialty": "Nefrólogo"
+      }
+    ],
+    "isEnabled": true
+  },
+  {
+    "survey_id": "cardio_event_2025",
+    "day": 2,
+    "date": "2025-11-15",
+    "question_number": 3,
+    "question_type": "practical_spaces",
+    "question_text": "En cuanto a los espacios prácticos de la agenda el día de hoy, ¿Cómo valorarías su utilidad y aplicación en la práctica clínica diaria?",
+    "scale": {
+      "min": 1,
+      "max": 10,
+      "min_label": "Nada aplicable",
+      "max_label": "Muy aplicable"
+    },
+    "isEnabled": true
+  },
+  {
+    "survey_id": "cardio_event_2025",
+    "day": 2,
+    "date": "2025-11-15",
+    "question_number": 4,
+    "question_type": "incremental_learning",
+    "question_text": "¿Considera que los contenidos aprendidos el día de hoy le proporcionaron un aprendizaje incremental para su práctica clínica diaria?",
+    "scale": {
+      "min": 1,
+      "max": 5,
+      "min_label": "Ningún conocimiento incremental",
+      "max_label": "Conocimiento incremental significativo"
+    },
+    "isEnabled": true
+  },
+  {
+    "survey_id": "cardio_event_2025",
+    "day": 2,
+    "date": "2025-11-15",
+    "question_number": 5,
+    "question_type": "campus_feedback",
+    "question_text": "Campus 1,2,3 riesgo cardiovascular, tiene previsto desarrollar e implementar progresivamente 2 niveles más de profundidad.",
+    "scale": {
+      "min": 1,
+      "max": 2,
+      "min_label": "No",
+      "max_label": "Sí"
+    },
+    "isEnabled": true
+  },
+  {
+    "survey_id": "cardio_event_2025",
+    "day": 2,
+    "date": "2025-11-15",
+    "question_number": 6,
+    "question_type": "pre_event_info",
+    "question_text": "¿Cómo evalúa la claridad y utilidad de la información recibida antes del evento (ej.: programa, logística, requisitos)?",
+    "scale": {
+      "min": 1,
+      "max": 10,
+      "min_label": "Pobre",
+      "max_label": "Excelente"
+    },
+    "isEnabled": true
+  },
+  {
+    "survey_id": "cardio_event_2025",
+    "day": 2,
+    "date": "2025-11-15",
+    "question_number": 7,
+    "question_type": "logistics",
+    "question_text": "Por favor, califique la organización de aspectos logísticos como traslados, alojamiento y alimentación (si aplica).",
+    "scale": {
+      "min": 1,
+      "max": 10,
+      "min_label": "Pobre",
+      "max_label": "Excelente"
+    },
+    "isEnabled": true
+  },
+  {
+    "survey_id": "cardio_event_2025",
+    "day": 2,
+    "date": "2025-11-15",
+    "question_number": 8,
+    "question_type": "agenda_compliance",
+    "question_text": "¿Cómo evalúa el cumplimiento de la agenda?",
+    "scale": {
+      "min": 1,
+      "max": 10,
+      "min_label": "Pobre",
+      "max_label": "Excelente"
+    },
+    "isEnabled": true
+  }
+]
+

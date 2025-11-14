@@ -7,7 +7,7 @@ import { QrCode, Download } from "lucide-react";
 import QRCode from "qrcode";
 
 interface QRCodeViewerProps {
-  viewName: "agenda" | "speakers" | "preguntas";
+  viewName: "agenda" | "speakers" | "preguntas" | "encuestas" | "estadisticas";
   label: string;
 }
 
@@ -19,11 +19,18 @@ export function QRCodeViewer({ viewName, label }: QRCodeViewerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Mapear nombres de vista a rutas
-  const routeMap: Record<"agenda" | "speakers" | "preguntas", string> = useMemo(() => ({
-    agenda: "agenda",
-    speakers: "speakers",
-    preguntas: "preguntas",
-  }), []);
+  const statsToken = process.env.NEXT_PUBLIC_QR_STATS_TOKEN || "stats-access";
+
+  const routeMap: Record<"agenda" | "speakers" | "preguntas" | "encuestas" | "estadisticas", string> = useMemo(
+    () => ({
+      agenda: "/dashboard/agenda",
+      speakers: "/dashboard/speakers",
+      preguntas: "/dashboard/preguntas",
+      encuestas: "/dashboard/encuestas",
+      estadisticas: `/estatistics?qr_key=${encodeURIComponent(statsToken)}`,
+    }),
+    [statsToken]
+  );
 
   // Asegurar que el componente esté montado antes de generar la URL
   useEffect(() => {
@@ -35,7 +42,7 @@ export function QRCodeViewer({ viewName, label }: QRCodeViewerProps) {
     if (isMounted && typeof window !== "undefined") {
       const baseUrl = window.location.origin;
       const route = routeMap[viewName];
-      const url = `${baseUrl}/dashboard/${route}`;
+      const url = `${baseUrl}${route}`;
       setQrUrl(url);
     }
   }, [isMounted, viewName, routeMap, isOpen]);
