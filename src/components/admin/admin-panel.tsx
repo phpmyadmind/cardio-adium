@@ -1,15 +1,20 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { UserManagement } from "./user-management";
 import { AgendaManagement } from "./agenda-management";
 import { SpeakerManagement } from "./speaker-management";
 import { QaManagement } from "./qa-management";
 import { SurveyManagement } from "./survey-management";
 import { SurveyStatsView } from "@/components/survey-stats-view";
-import { Users, Calendar, Mic, HelpCircle, ListChecks, BarChart3 } from "lucide-react";
+import { Users, Calendar, Mic, HelpCircle, ListChecks, BarChart3, DownloadCloud, FileText, ExternalLink } from "lucide-react";
 
 export function AdminPanel() {
+  const router = useRouter();
+
   return (
     <Tabs defaultValue="users" className="w-full">
       <TabsList className="grid w-full grid-cols-2 sm:grid-cols-6 h-auto sm:h-12">
@@ -54,6 +59,26 @@ export function AdminPanel() {
         <SurveyManagement />
       </TabsContent>
       <TabsContent value="stats" className="mt-6">
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Estadísticas Completas
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => router.push("/admin/statistics")}
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Ver Estadísticas Completas
+              </Button>
+            </CardTitle>
+            <CardDescription>
+              Vista resumida de estadísticas. Haga clic en "Ver Estadísticas Completas" para ver todos los gráficos y análisis detallados.
+            </CardDescription>
+          </CardHeader>
+        </Card>
         <SurveyStatsView compact />
       </TabsContent>
     </Tabs>

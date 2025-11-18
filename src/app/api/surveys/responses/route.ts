@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     if (questionId) query.questionId = questionId;
     if (userId) query.userId = userId;
 
-    const responses = await SurveyResponse.find(query).sort({ createdAt: -1 }).limit(500);
+    const responses = await SurveyResponse.find(query).sort({ createdAt: -1 });
     return NextResponse.json(
       responses.map((response) => ({
         id: response._id.toString(),
