@@ -416,21 +416,33 @@ export function ExecutiveReportView() {
     };
 
     // Función para generar imagen desde opciones de ECharts directamente
-    const getChartImageFromOption = async (option: any, chartHeight: number = 450): Promise<string | null> => {
+    // Genera un contenedor fijo y ajusta el contenido del gráfico dentro de él
+    const getChartImageFromOption = async (option: any, chartHeight: number = 500): Promise<string | null> => {
       try {
         const echarts = await import('echarts');
-        // Crear un elemento DOM temporal para inicializar ECharts
+        
+        // Definir tamaño fijo del contenedor (sin padding adicional)
+        const containerWidth = 1200;
+        const containerHeight = chartHeight;
+        
+        // Crear contenedor DOM con tamaño fijo
         const container = document.createElement('div');
-        container.style.width = '1000px';
-        container.style.height = `${chartHeight}px`;
+        container.style.width = `${containerWidth}px`;
+        container.style.height = `${containerHeight}px`;
         container.style.position = 'absolute';
         container.style.left = '-9999px';
+        container.style.top = '-9999px';
+        container.style.visibility = 'hidden';
+        container.style.padding = '0';
+        container.style.margin = '0';
+        container.style.boxSizing = 'border-box';
         document.body.appendChild(container);
         
+        // Inicializar ECharts dentro del contenedor con dimensiones exactas
         const echartsInstance = echarts.init(container, null, {
           renderer: 'canvas',
-          width: 1000,
-          height: chartHeight
+          width: containerWidth,
+          height: containerHeight
         });
         
         if (!echartsInstance) {
@@ -438,32 +450,51 @@ export function ExecutiveReportView() {
           return null;
         }
         
-        // Asegurar que las opciones tengan el tamaño correcto
+        // Ajustar opciones del gráfico para que se ajuste dentro del contenedor
+        // Sin padding adicional, solo el grid necesario
         const fullOption = {
           ...option,
-          width: 1000,
-          height: chartHeight,
+          // Ajustar grid para que el contenido quepa dentro del contenedor
+          grid: {
+            ...(option.grid || {}),
+            left: option.grid?.left || '8%',
+            right: option.grid?.right || '5%',
+            top: option.grid?.top || '8%',
+            bottom: option.grid?.bottom || '8%',
+            containLabel: true, // Asegura que las etiquetas no se corten
+          },
+          // Ajustar título si existe
+          title: option.title ? {
+            ...option.title,
+            top: option.title.top || '3%',
+          } : undefined,
+          // No establecer width/height aquí, dejar que ECharts use el contenedor
         };
         
+        // Limpiar y establecer opciones
+        echartsInstance.clear();
         echartsInstance.setOption(fullOption, true);
         
-        // Esperar a que el gráfico se renderice completamente
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Esperar renderizado inicial
+        await new Promise(resolve => setTimeout(resolve, 600));
         
-        // Forzar el resize para asegurar el renderizado
+        // Forzar resize al tamaño exacto del contenedor
         echartsInstance.resize({
-          width: 1000,
-          height: chartHeight
+          width: containerWidth,
+          height: containerHeight
         });
         
-        await new Promise(resolve => setTimeout(resolve, 400));
+        // Esperar renderizado completo
+        await new Promise(resolve => setTimeout(resolve, 700));
         
+        // Generar imagen con calidad alta
         const imageDataUrl = echartsInstance.getDataURL({
           type: 'png',
-          pixelRatio: 1,
+          pixelRatio: 2,
           backgroundColor: '#ffffff'
         });
         
+        // Limpiar
         echartsInstance.dispose();
         document.body.removeChild(container);
         return imageDataUrl;
@@ -474,12 +505,13 @@ export function ExecutiveReportView() {
     };
 
     // Función para agregar imagen al PDF
+    // La imagen ya viene del contenedor con tamaño correcto, solo necesita ajustarse al PDF
     const addImageToPDF = async (imageDataUrl: string | null, title: string, maxHeight?: number) => {
       if (!imageDataUrl) return;
       
-      // Márgenes del gráfico
-      const chartMargin = 5; // Margen interno alrededor del gráfico
-      const borderWidth = 1; // Ancho del borde
+      // Márgenes mínimos para el borde
+      const borderWidth = 0.3; // Borde muy delgado
+      const borderPadding = 2; // Pequeño espacio para el borde
       
       // Agregar título de la imagen solo si no está vacío
       if (title) {
@@ -490,41 +522,50 @@ export function ExecutiveReportView() {
         yPosition += lineHeight;
       }
       
-      // Calcular dimensiones manteniendo proporción - usar 100% del ancho
+      // Calcular dimensiones manteniendo proporción exacta de la imagen original
       const img = new Image();
       img.src = imageDataUrl;
       
       await new Promise((resolve) => {
         img.onload = () => {
-          const imgWidth = imageWidth; // Usar 100% del ancho de página (menos márgenes)
-          const imgHeight = (img.height / img.width) * imgWidth;
+          // Calcular ancho disponible (restando solo el espacio del borde)
+          const availableWidth = imageWidth - (borderPadding * 2) - (borderWidth * 2);
+          const imgWidth = availableWidth;
           
-          // Usar la altura calculada manteniendo la proporción completa
-          // Solo limitar si excede el espacio disponible en la página
-          const availableHeight = pageHeight - yPosition - margin - lineHeight - (chartMargin * 2) - (borderWidth * 2);
-          const finalHeight = Math.min(imgHeight, availableHeight);
+          // Calcular altura manteniendo la proporción EXACTA de la imagen original
+          const aspectRatio = img.height / img.width;
+          const imgHeight = imgWidth * aspectRatio;
           
-          // Calcular dimensiones del marco (incluye márgenes y borde)
-          const frameWidth = imgWidth + (chartMargin * 2);
-          const frameHeight = finalHeight + (chartMargin * 2);
+          // Calcular espacio total necesario
+          const totalHeightNeeded = imgHeight + (borderPadding * 2) + (borderWidth * 2) + lineHeight;
+          const availableHeight = pageHeight - yPosition - margin;
+          
+          // Si no cabe en la página actual, agregar nueva página ANTES de dibujar
+          if (totalHeightNeeded > availableHeight) {
+            checkNewPage(totalHeightNeeded);
+          }
+          
+          // Calcular posición del marco (solo borde, sin padding excesivo)
           const frameX = margin;
           const frameY = yPosition;
+          const frameWidth = imgWidth + (borderPadding * 2) + (borderWidth * 2);
+          const frameHeight = imgHeight + (borderPadding * 2) + (borderWidth * 2);
           
-          checkNewPage(frameHeight + (borderWidth * 2) + lineHeight);
-          
-          // Dibujar el marco (rectángulo con borde)
-          doc.setDrawColor(200, 200, 200); // Color gris claro para el borde
+          // Dibujar fondo muy claro para el marco
+          doc.setFillColor(250, 251, 252); // Color casi blanco
+          doc.setDrawColor(240, 242, 245); // Borde muy claro y delgado
           doc.setLineWidth(borderWidth);
-          doc.rect(frameX, frameY, frameWidth, frameHeight);
+          // Dibujar rectángulo con fondo (simula borde redondeado visualmente)
+          doc.roundedRect(frameX, frameY, frameWidth, frameHeight, 1.5, 1.5, 'FD'); // 'FD' = Fill and Draw
           
-          
-          // Agregar la imagen dentro del marco (con márgenes)
-          const imageX = frameX + chartMargin;
-          const imageY = frameY + chartMargin;
-          doc.addImage(imageDataUrl, 'PNG', imageX, imageY, imgWidth, finalHeight);
+          // Agregar la imagen EXACTAMENTE con las dimensiones calculadas (sin recortes)
+          // La imagen ya viene del contenedor con el tamaño correcto
+          const imageX = frameX + borderPadding + borderWidth;
+          const imageY = frameY + borderPadding + borderWidth;
+          doc.addImage(imageDataUrl, 'PNG', imageX, imageY, imgWidth, imgHeight, undefined, 'FAST');
           
           // Actualizar posición Y para el siguiente elemento
-          yPosition += frameHeight + (borderWidth * 2) + sectionSpacing;
+          yPosition += frameHeight + sectionSpacing;
           resolve(null);
         };
         img.onerror = () => resolve(null);
@@ -656,10 +697,11 @@ export function ExecutiveReportView() {
             },
             ],
             grid: {
-              left: "10%",
-              right: "5%",
-              bottom: "5%",
-              top: "5%",
+              left: "12%",
+              right: "8%",
+              bottom: "12%",
+              top: "12%",
+              containLabel: true, // Asegura que las etiquetas no se corten
             },
             backgroundColor: "#ffffff"
           };
@@ -684,8 +726,8 @@ export function ExecutiveReportView() {
           doc.text(questionDescription, margin, yPosition);
           yPosition += lineHeight * 1.5;
           
-          // Generar y agregar gráfico completo
-          const chartImage = await getChartImageFromOption(chartOption, 450);
+          // Generar y agregar gráfico completo (regenerar con nueva configuración)
+          const chartImage = await getChartImageFromOption(chartOption, 500);
           if (chartImage) {
             await addImageToPDF(chartImage, "");
           }
@@ -739,10 +781,22 @@ export function ExecutiveReportView() {
               type: "category",
               data: ratingEntries.map(e => e.rating.toString()),
               name: "Calificación",
+              axisLabel: {
+                formatter: (value: number) => value.toLocaleString(),
+                fontSize: 15,
+                fontWeight: "bold",
+                color: "#000000",
+              },
             },
             yAxis: {
               type: "value",
               name: "Cantidad de Votos",
+              axisLabel: {
+                formatter: (value: number) => value.toLocaleString(),
+                fontSize: 15,
+                fontWeight: "bold",
+                color: "#000000",
+              },
             },
             series: [
               {
@@ -766,10 +820,11 @@ export function ExecutiveReportView() {
             },
             ],
             grid: {
-              left: "15%",
-              right: "10%",
+              left: "10%",
+              right: "8%",
               bottom: "15%",
-              top: "20%",
+              top: "15%",
+              containLabel: true, // Asegura que las etiquetas no se corten
             },
             backgroundColor: "#ffffff"
           };
@@ -796,7 +851,7 @@ export function ExecutiveReportView() {
           doc.text(speakerDescription, margin, yPosition);
           yPosition += lineHeight * 1.5;
           
-          // Generar y agregar gráfico completo
+          // Generar y agregar gráfico completo (regenerar con nueva configuración)
           const chartImage = await getChartImageFromOption(chartOption, 500);
           if (chartImage) {
             await addImageToPDF(chartImage, "");
