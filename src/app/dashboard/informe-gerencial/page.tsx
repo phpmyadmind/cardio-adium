@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Menu, LogOut } from "lucide-react";
 import { LogoHead } from "@/components/logo";
@@ -20,25 +20,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-const QR_STATS_TOKEN = process.env.NEXT_PUBLIC_QR_STATS_TOKEN || "stats-access";
-
-export default function SurveyStatsPage() {
+export default function ExecutiveReportPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { user, isUserLoading, logout } = useAuthContext();
   const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [hasQrAccess, setHasQrAccess] = useState(false);
-
-  useEffect(() => {
-    const qrKey = searchParams?.get("qr_key");
-    if (qrKey && qrKey === QR_STATS_TOKEN) {
-      setHasQrAccess(true);
-    }
-  }, [searchParams]);
 
   const isAdmin = user?.isAdmin === true;
-  const allowAccess = useMemo(() => isAdmin || hasQrAccess, [isAdmin, hasQrAccess]);
 
   const handleLogout = () => {
     setIsLoggingOut(true);
@@ -53,19 +41,19 @@ export default function SurveyStatsPage() {
   };
 
   useEffect(() => {
-    if (!isUserLoading && !allowAccess) {
+    if (!isUserLoading && !isAdmin) {
       router.replace("/login");
     }
-  }, [allowAccess, isUserLoading, router]);
+  }, [isAdmin, isUserLoading, router]);
 
-  if (!allowAccess) {
+  if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="max-w-md text-center space-y-4">
           <LogoHead className="w-24 h-24 mx-auto" />
           <h1 className="text-2xl font-bold text-primary">Acceso restringido</h1>
           <p className="text-muted-foreground">
-            Esta vista de estadísticas está disponible únicamente para administradores o mediante el código QR autorizado.
+            Esta vista está disponible únicamente para administradores.
           </p>
         </div>
       </div>

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { LogOut } from "lucide-react";
 import { LogoHead } from "@/components/logo";
-import { SurveyStatsView } from "@/components/survey-stats-view";
+import { ExecutiveReportView } from "@/components/executive-report-view";
 import { useAuthContext } from "@/contexts/auth.context";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -106,7 +106,7 @@ function StatisticsContent() {
       </header>
 
       <main className="flex-grow px-4 sm:px-6 md:px-8 py-8 relative z-10">
-        <SurveyStatsView />
+        <ExecutiveReportView />
       </main>
 
       <div className="flex-shrink-0 relative w-full pb-20 sm:pb-24 mt-auto">

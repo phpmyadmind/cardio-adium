@@ -22,10 +22,11 @@ import {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { logout } = useAuthContext();
+  const { logout, user } = useAuthContext();
   const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [hasSurveys, setHasSurveys] = useState(false);
+  const isAdmin = user?.isAdmin === true;
 
   const handleLogout = () => {
     setIsLoggingOut(true);
@@ -129,6 +130,14 @@ export default function DashboardPage() {
               className="w-full h-16 sm:h-20 text-lg sm:text-xl font-bold rounded-xl bg-[#2E61FA] hover:bg-[#365899] text-white shadow-md"
             >
               ENCUESTAS
+            </Button>
+          )}
+          {isAdmin && (
+            <Button
+              onClick={() => router.push('/estatistics')}
+              className="w-full h-16 sm:h-20 text-lg sm:text-xl font-bold rounded-xl bg-[#10b981] hover:bg-[#059669] text-white shadow-md"
+            >
+              INFORME GERENCIAL
             </Button>
           )}
           <Button 

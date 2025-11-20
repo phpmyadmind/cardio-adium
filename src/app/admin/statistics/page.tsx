@@ -1,7 +1,7 @@
 "use client";
 
 import { Header } from "@/components/header";
-import { SurveyStatsView } from "@/components/survey-stats-view";
+import { ExecutiveReportView } from "@/components/executive-report-view";
 import { AuthGuard } from "@/components/admin/auth-guard";
 
 export default function AdminStatisticsPage() {
@@ -11,9 +11,9 @@ export default function AdminStatisticsPage() {
       <main className="container mx-auto p-4 sm:p-6 md:p-8">
         <AuthGuard>
           <h1 className="text-3xl font-bold font-headline mb-6 text-primary">
-            Estadísticas de Encuestas
+            Informe Gerencial
           </h1>
-          <SurveyStatsView compact={false} />
+          <ExecutiveReportView />
         </AuthGuard>
       </main>
     </div>
