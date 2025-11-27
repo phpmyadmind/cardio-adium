@@ -9,8 +9,9 @@ import { AgendaManagement } from "./agenda-management";
 import { SpeakerManagement } from "./speaker-management";
 import { QaManagement } from "./qa-management";
 import { SurveyManagement } from "./survey-management";
+import { EventTrackerManagement } from "./event-tracker-management";
 import { ExecutiveReportView } from "@/components/executive-report-view";
-import { Users, Calendar, Mic, HelpCircle, ListChecks, BarChart3, DownloadCloud, FileText, ExternalLink } from "lucide-react";
+import { Users, Calendar, Mic, HelpCircle, ListChecks, BarChart3, DownloadCloud, FileText, ExternalLink, Tag } from "lucide-react";
 
 export function AdminPanel() {
   const router = useRouter();
@@ -18,12 +19,12 @@ export function AdminPanel() {
   const tabParam = searchParams.get("tab");
   
   // Validar que el tab sea uno de los valores permitidos
-  const validTabs = ["users", "agenda", "speakers", "qa", "surveys", "stats"];
+  const validTabs = ["users", "agenda", "speakers", "qa", "surveys", "event-trackers", "stats"];
   const defaultTab = tabParam && validTabs.includes(tabParam) ? tabParam : "users";
 
   return (
     <Tabs defaultValue={defaultTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 h-auto sm:h-12">
+      <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 h-auto sm:h-12">
         <TabsTrigger value="users" className="text-base py-2">
           <Users className="mr-2 h-5 w-5" />
           Users
@@ -44,6 +45,10 @@ export function AdminPanel() {
           <ListChecks className="mr-2 h-5 w-5" />
           Encuestas
         </TabsTrigger>
+        <TabsTrigger value="event-trackers" className="text-base py-2">
+          <Tag className="mr-2 h-5 w-5" />
+          Eventos
+        </TabsTrigger>
         <TabsTrigger value="stats" className="text-base py-2">
           <BarChart3 className="mr-2 h-5 w-5" />
           Estadísticas
@@ -63,6 +68,9 @@ export function AdminPanel() {
       </TabsContent>
       <TabsContent value="surveys" className="mt-6">
         <SurveyManagement />
+      </TabsContent>
+      <TabsContent value="event-trackers" className="mt-6">
+        <EventTrackerManagement />
       </TabsContent>
       <TabsContent value="stats" className="mt-6">
         <ExecutiveReportView />

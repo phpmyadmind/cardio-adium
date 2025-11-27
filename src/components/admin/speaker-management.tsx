@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -35,7 +35,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
-import { PlusCircle, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { PlusCircle, MoreHorizontal, Edit, Trash2, Upload, Loader2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useToast } from "@/hooks/use-toast";
@@ -49,15 +50,39 @@ const speakerSchema = z.object({
   imageHint: z.string().optional(),
   qualifications: z.array(z.string()).default([]),
   specialization: z.string().optional(),
+  event_tracker: z.string().optional().or(z.literal("none")),
 });
+
+interface EventTracker {
+  id: string;
+  name: string;
+  isActive: boolean;
+}
 
 type SpeakerFormValues = z.infer<typeof speakerSchema>;
 
 export function SpeakerManagement() {
   const [isDialogOpen, setDialogOpen] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [editingSpeaker, setEditingSpeaker] = useState<Speaker | null>(null);
   const { data: speakers, isLoading, refetch } = useMongoCollection<Speaker>('/api/speakers');
+  const { data: eventTrackers, isLoading: eventTrackersLoading } = useMongoCollection<EventTracker>('/api/event-trackers');
   const { toast } = useToast();
+
+  // Obtener el evento activo por defecto
+  const activeEventTracker = useMemo(() => {
+    return eventTrackers.find(et => et.isActive);
+  }, [eventTrackers]);
+
+  // Crear un mapa de event trackers por ID
+  const eventTrackerMap = useMemo(() => {
+    const map = new Map<string, string>();
+    eventTrackers.forEach(et => {
+      map.set(et.id, et.name);
+    });
+    return map;
+  }, [eventTrackers]);
 
   const form = useForm<SpeakerFormValues>({
     resolver: zodResolver(speakerSchema),
@@ -69,6 +94,7 @@ export function SpeakerManagement() {
       imageHint: "",
       qualifications: [],
       specialization: "",
+      event_tracker: activeEventTracker?.id || "none",
     },
   });
 
@@ -83,10 +109,20 @@ export function SpeakerManagement() {
         imageHint: speaker.imageHint || "",
         qualifications: speaker.qualifications || [],
         specialization: speaker.specialization || "",
+        event_tracker: speaker.event_tracker || activeEventTracker?.id || "none",
       });
     } else {
       setEditingSpeaker(null);
-      form.reset();
+      form.reset({
+        name: "",
+        specialty: "",
+        bio: "",
+        imageUrl: "",
+        imageHint: "",
+        qualifications: [],
+        specialization: "",
+        event_tracker: activeEventTracker?.id || "none",
+      });
     }
     setDialogOpen(true);
   };
@@ -108,6 +144,7 @@ export function SpeakerManagement() {
         imageHint: data.imageHint || undefined,
         qualifications: data.qualifications || [],
         specialization: data.specialization || undefined,
+        event_tracker: data.event_tracker === "none" || !data.event_tracker ? undefined : data.event_tracker,
       };
 
       const url = '/api/speakers';
@@ -142,6 +179,47 @@ export function SpeakerManagement() {
     }
   };
 
+  const handleUploadPDF = async () => {
+    const pdfPath = "C:\\Users\\Ing integraciones IA\\Documents\\cardio-adium-assets\\Doctores.pdf";
+    const eventTrackerId = activeEventTracker?.id;
+
+    setIsUploading(true);
+    try {
+      const response = await fetch('/api/speakers/upload-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          pdfPath,
+          event_tracker: eventTrackerId,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Error al cargar el PDF');
+      }
+
+      toast({
+        title: "PDF cargado exitosamente",
+        description: `Se procesaron ${result.total} doctores. ${result.created} creados, ${result.updated} actualizados.`,
+      });
+
+      refetch();
+      setIsUploadDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Ocurrió un error al cargar el PDF.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("¿Está seguro de que desea eliminar este ponente?")) {
       return;
@@ -172,7 +250,9 @@ export function SpeakerManagement() {
     }
   };
 
-  if (isLoading) {
+  const isLoadingData = isLoading || eventTrackersLoading;
+
+  if (isLoadingData) {
     return (
       <Card>
         <CardHeader>
@@ -187,24 +267,56 @@ export function SpeakerManagement() {
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Gestión de Ponentes</CardTitle>
-          <CardDescription>Gestionar perfiles de ponentes para el evento.</CardDescription>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
+    <>
+      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cargar Doctores desde PDF</DialogTitle>
+            <DialogDescription>
+              Se cargarán automáticamente los doctores desde el archivo PDF ubicado en:
+              <br />
+              <code className="text-xs mt-2 block p-2 bg-muted rounded">
+                C:\Users\Ing integraciones IA\Documents\cardio-adium-assets\Doctores.pdf
+              </code>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              Los doctores se asociarán al evento activo: <strong>{activeEventTracker?.name || 'Ninguno'}</strong>
+            </p>
             <Button
-              onClick={() => handleOpenDialog()}
-              size="sm"
-              className="gap-1 h-12 text-base font-bold rounded-xl bg-[#2E61FA] hover:bg-[#365899] text-white shadow-md px-4"
+              onClick={handleUploadPDF}
+              disabled={isUploading || !activeEventTracker}
+              className="w-full"
             >
-              <PlusCircle className="h-4 w-4" />
-              Agregar Ponente
+              {isUploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Procesando PDF...
+                </>
+              ) : (
+                <>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Cargar Doctores
+                </>
+              )}
             </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+            {!activeEventTracker && (
+              <p className="text-sm text-destructive mt-2">
+                No hay un evento activo. Active un evento antes de cargar doctores.
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingSpeaker ? 'Editar Ponente' : 'Agregar Nuevo Ponente'}</DialogTitle>
               <DialogDescription>
@@ -278,6 +390,34 @@ export function SpeakerManagement() {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="event_tracker"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Evento Tracker</FormLabel>
+                      <Select 
+                        onValueChange={(value) => field.onChange(value === "none" ? undefined : value)} 
+                        value={field.value || "none"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccione un evento" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">Sin evento</SelectItem>
+                          {eventTrackers.map((et) => (
+                            <SelectItem key={et.id} value={et.id}>
+                              {et.name} {et.isActive && "(Activo)"}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={handleCloseDialog}>
                     Cancelar
@@ -291,8 +431,34 @@ export function SpeakerManagement() {
                 </DialogFooter>
               </form>
             </Form>
-          </DialogContent>
-        </Dialog>
+        </DialogContent>
+      </Dialog>
+
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Gestión de Ponentes</CardTitle>
+          <CardDescription>Gestionar perfiles de ponentes para el evento.</CardDescription>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setIsUploadDialogOpen(true)}
+            size="sm"
+            variant="outline"
+            className="gap-1 h-12 text-base font-bold rounded-xl px-4"
+          >
+            <Upload className="h-4 w-4" />
+            Cargar PDF
+          </Button>
+          <Button
+            onClick={() => handleOpenDialog()}
+            size="sm"
+            className="gap-1 h-12 text-base font-bold rounded-xl bg-[#2E61FA] hover:bg-[#365899] text-white shadow-md px-4"
+          >
+            <PlusCircle className="h-4 w-4" />
+            Agregar Ponente
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
@@ -300,18 +466,23 @@ export function SpeakerManagement() {
             <TableRow>
               <TableHead>Nombre</TableHead>
               <TableHead>Especialidad</TableHead>
+              <TableHead>Evento</TableHead>
               <TableHead><span className="sr-only">Acciones</span></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {speakers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                   No hay ponentes registrados.
                 </TableCell>
               </TableRow>
             ) : (
-              speakers.map((speaker) => (
+              speakers.map((speaker) => {
+                const eventTrackerName = (speaker.event_tracker || speaker.event_tracker)
+                  ? (eventTrackerMap.get(speaker.event_tracker || speaker.event_tracker || '') || '-')
+                  : '-';
+                return (
                 <TableRow key={speaker.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
@@ -323,6 +494,7 @@ export function SpeakerManagement() {
                     </div>
                   </TableCell>
                   <TableCell>{speaker.specialty}</TableCell>
+                  <TableCell>{eventTrackerName}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -347,11 +519,13 @@ export function SpeakerManagement() {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))
+              );
+              })
             )}
           </TableBody>
         </Table>
       </CardContent>
     </Card>
+    </>
   );
 }

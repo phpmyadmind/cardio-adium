@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb/connect';
 import { User } from '@/lib/mongodb/models/User';
+import { EventTracker } from '@/lib/mongodb/models/EventTracker';
 import bcrypt from 'bcryptjs';
 
 // GET /api/users - Obtener usuarios (solo admins)
@@ -76,6 +77,15 @@ export async function POST(request: NextRequest) {
       hashedPassword = await bcrypt.hash(body.password, 10);
     }
     
+    // Obtener el evento activo por defecto si no se proporciona event_tracker
+    let eventTrackerId = body.event_tracker || body.eventTracker; // Soporte para ambos nombres
+    if (!eventTrackerId && !body.isAdmin) {
+      const activeEventTracker = await EventTracker.findOne({ isActive: true });
+      if (activeEventTracker) {
+        eventTrackerId = activeEventTracker._id.toString();
+      }
+    }
+    
     const userData = {
       email: body.email?.toLowerCase().trim(),
       medicalId: body.medicalId?.trim(),
@@ -87,6 +97,7 @@ export async function POST(request: NextRequest) {
       termsAccepted: body.termsAccepted,
       question: body.question,
       answer: body.answer,
+      event_tracker: eventTrackerId,
     };
     
     const user = new User(userData);

@@ -18,6 +18,7 @@ export interface UserProfile {
   updatedAt?: any;
   lastLogin?: any;
   termsAccepted?: boolean;
+  event_tracker?: string; // ID del evento tracker asignado
 }
 
 export interface AuthResult {

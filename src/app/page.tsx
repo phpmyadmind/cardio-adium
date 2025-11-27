@@ -96,18 +96,19 @@ export default function Home() {
         {/* Buttons Section - Center */}
         <div className="flex-grow flex items-center justify-center px-8 sm:px-12">
           <div className="w-full max-w-sm space-y-4">
+          <Button 
+              className="w-full h-16 sm:h-20 text-lg sm:text-xl font-bold rounded-xl bg-[#FD0233] hover:bg-[#d00707] text-white shadow-md" 
+              asChild
+            >
+              <Link href="/register">REGISTRO</Link>
+            </Button>
             <Button 
               className="w-full h-16 sm:h-20 text-lg sm:text-xl font-bold rounded-xl bg-[#2E61FA] hover:bg-[#365899] text-white shadow-md" 
               asChild
             >
               <Link href="/login">INICIAR</Link>
             </Button>
-            <Button 
-              className="w-full h-16 sm:h-20 text-lg sm:text-xl font-bold rounded-xl bg-[#FD0233] hover:bg-[#d00707] text-white shadow-md" 
-              asChild
-            >
-              <Link href="/register">REGISTRO</Link>
-            </Button>
+           
           </div>
         </div>
 

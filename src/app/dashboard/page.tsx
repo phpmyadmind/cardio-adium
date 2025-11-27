@@ -188,7 +188,7 @@ export default function DashboardPage() {
           <p>
             Este evento está dirigido exclusivamente al cuerpo médico y es de carácter personal e intransferible. Adium no promociona ni promueve el uso de sus productos / medicamentos en forma diferente al aprobado por la Autoridad regulatoria e incluida en la información de prescripción o ficha técnica. Para mayor información comunicarse con el departamento médico de Adium S.A.S. Carrera 16 No. 85-96. Bogotá D.C. - Teléfono: +601 6460505 Si usted conoce un evento adverso/incidente de nuestros medicamentos / dispositivos médicos, por favor reportarlo a farmacovigilancia@adium.com.co
           </p>
-          <p className="mt-2 font-medium">CO-2500361</p>
+          <p className="mt-2 font-medium">CO-2500362</p>
         </div>
       </footer>
     </div>

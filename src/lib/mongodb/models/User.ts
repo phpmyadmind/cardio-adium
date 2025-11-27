@@ -15,6 +15,7 @@ export interface IUser extends Document {
   termsAccepted?: boolean;
   question?: string;
   answer?: string;
+  event_tracker?: string; // ID del evento tracker asignado
 }
 
 const UserSchema = new Schema<IUser>(
@@ -63,6 +64,10 @@ const UserSchema = new Schema<IUser>(
     answer: {
       type: String,
     },
+    event_tracker: {
+      type: String,
+      index: true,
+    },
   },
   {
     timestamps: true, // Crea createdAt y updatedAt automáticamente
@@ -73,6 +78,7 @@ const UserSchema = new Schema<IUser>(
 UserSchema.index({ email: 1 });
 UserSchema.index({ medicalId: 1 });
 UserSchema.index({ isAdmin: 1 });
+UserSchema.index({ event_tracker: 1 });
 
 export const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 

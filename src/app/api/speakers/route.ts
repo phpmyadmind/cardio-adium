@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
     await connectDB();
     const searchParams = request.nextUrl.searchParams;
     const speakerId = searchParams.get('speakerId');
+    const eventTrackerId = searchParams.get('eventTrackerId');
     
     if (speakerId) {
       const speaker = await Speaker.findById(speakerId);
@@ -17,8 +18,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ id: speaker._id.toString(), ...speaker.toObject() });
     }
     
+    // Construir query de filtrado
+    let query: any = {};
+    if (eventTrackerId) {
+      query.event_tracker = eventTrackerId;
+    }
+    
     // Obtener todos los speakers
-    const speakers = await Speaker.find({});
+    const speakers = await Speaker.find(query);
     return NextResponse.json(speakers.map(speaker => ({ id: speaker._id.toString(), ...speaker.toObject() })));
   } catch (error: any) {
     console.error('Error en GET /api/speakers:', error);

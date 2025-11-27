@@ -9,6 +9,7 @@ export interface ISpeaker extends Document {
   imageHint: string;
   qualifications?: string[];
   specialization?: string; // Alias para specialty
+  event_tracker?: string; // ID del evento tracker
 }
 
 const SpeakerSchema = new Schema<ISpeaker>(
@@ -40,14 +41,19 @@ const SpeakerSchema = new Schema<ISpeaker>(
       type: [String],
       default: [],
     },
+    event_tracker: {
+      type: String,
+      index: true,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// Índice para búsquedas por nombre
+// Índices para búsquedas
 SpeakerSchema.index({ name: 1 });
+SpeakerSchema.index({ event_tracker: 1 });
 
 export const Speaker = mongoose.models.Speaker || mongoose.model<ISpeaker>('Speaker', SpeakerSchema);
 

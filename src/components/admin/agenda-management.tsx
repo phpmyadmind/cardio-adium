@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -35,10 +35,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
-import { PlusCircle, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { PlusCircle, MoreHorizontal, Edit, Trash2, Upload, Loader2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { findEventAgendaPDF } from "@/lib/event-resources";
 
 // Schema de validación para eventos
 const eventSchema = z.object({
@@ -53,16 +54,32 @@ const eventSchema = z.object({
   location: z.string().optional(),
   section: z.string().optional(),
   participants: z.array(z.string()).default([]),
+  event_tracker: z.string().optional().or(z.literal("none")),
+  specialty: z.string().optional(),
 });
 
 type EventFormValues = z.infer<typeof eventSchema>;
 
+interface EventTracker {
+  id: string;
+  name: string;
+  isActive: boolean;
+}
+
 export function AgendaManagement() {
   const [isDialogOpen, setDialogOpen] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [editingEvent, setEditingEvent] = useState<AgendaItem | null>(null);
-  const { data: events, isLoading: eventsLoading, refetch } = useMongoCollection('/api/events');
+  const { data: agendaItems, isLoading: agendaLoading, refetch } = useMongoCollection<AgendaItem>('/api/agenda');
   const { data: speakers, isLoading: speakersLoading } = useMongoCollection<Speaker>('/api/speakers');
+  const { data: eventTrackers, isLoading: eventTrackersLoading } = useMongoCollection<EventTracker>('/api/event-trackers');
   const { toast } = useToast();
+
+  // Obtener el evento activo por defecto
+  const activeEventTracker = useMemo(() => {
+    return eventTrackers.find(et => et.isActive);
+  }, [eventTrackers]);
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
@@ -78,32 +95,24 @@ export function AgendaManagement() {
       location: "",
       section: "",
       participants: [],
+      event_tracker: activeEventTracker?.id || "none",
+      specialty: "",
     },
   });
 
-  // Convertir eventos a formato AgendaItem (todo como strings)
-  const agendaItems = useMemo(() => {
-    return events.map((event: any) => ({
-      id: event.id,
-      date: event.date || '',
-      startTime: event.startTime || '',
-      endTime: event.endTime || '',
-      topic: event.title || '',
-      speakerIds: event.speakerIds || [],
-      type: event.type,
-      moderator: event.moderator || '',
-      location: event.location || '',
-      section: event.section || '',
-      participants: event.participants || [],
-    } as AgendaItem));
-  }, [events]);
+  // Actualizar el valor por defecto cuando cambie el evento activo
+  useEffect(() => {
+    if (activeEventTracker && !editingEvent && !isDialogOpen) {
+      form.setValue('event_tracker', activeEventTracker.id);
+    }
+  }, [activeEventTracker, editingEvent, isDialogOpen, form]);
 
   const handleOpenDialog = (event?: AgendaItem) => {
     if (event) {
       setEditingEvent(event);
       form.reset({
-        title: event.topic,
-        description: "",
+        title: event.title || event.topic || "",
+        description: event.description || "",
         date: event.date,
         startTime: event.startTime,
         endTime: event.endTime,
@@ -113,10 +122,26 @@ export function AgendaManagement() {
         location: event.location || "",
         section: event.section || "",
         participants: event.participants || [],
+        event_tracker: (event.event_tracker || event.eventTracker) || activeEventTracker?.id || "none",
+        specialty: event.specialty || "",
       });
     } else {
       setEditingEvent(null);
-      form.reset();
+      form.reset({
+        title: "",
+        description: "",
+        date: "",
+        startTime: "",
+        endTime: "",
+        speakerIds: [],
+        type: 'session',
+        moderator: "",
+        location: "",
+        section: "",
+        participants: [],
+        event_tracker: activeEventTracker?.id || "none",
+        specialty: "",
+      });
     }
     setDialogOpen(true);
   };
@@ -129,6 +154,11 @@ export function AgendaManagement() {
 
   const onSubmit = async (data: EventFormValues) => {
     try {
+      // Si no se especifica event_tracker, usar el activo por defecto
+      const eventTrackerId = data.event_tracker === "none" || !data.event_tracker 
+        ? activeEventTracker?.id 
+        : data.event_tracker;
+
       // Guardar todo como strings (fecha y hora como texto)
       const eventData = {
         ...(editingEvent && { id: editingEvent.id }),
@@ -143,9 +173,11 @@ export function AgendaManagement() {
         location: data.location || undefined,
         section: data.section || undefined,
         participants: data.participants || [],
+        event_tracker: eventTrackerId || undefined,
+        specialty: data.specialty || undefined,
       };
 
-      const url = '/api/events';
+      const url = '/api/agenda';
       const method = editingEvent ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -177,13 +209,81 @@ export function AgendaManagement() {
     }
   };
 
+  const handleUploadPDF = async () => {
+    const eventTrackerId = activeEventTracker?.id;
+
+    if (!eventTrackerId) {
+      toast({
+        title: "Error",
+        description: "No hay un evento activo. Active un evento antes de cargar la agenda.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Buscar el PDF de agenda en la carpeta del evento
+    const agendaPdfPath = await findEventAgendaPDF(eventTrackerId);
+    
+    if (!agendaPdfPath) {
+      toast({
+        title: "Error",
+        description: `No se encontró un PDF de agenda en la carpeta del evento (public/${eventTrackerId}/). Asegúrese de que existe un archivo PDF de agenda.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Enviar la ruta relativa desde public/ (ej: "6928c443c96cf391f40ac142/Agenda.pdf")
+    // El servidor la resolverá correctamente
+    const relativePath = agendaPdfPath.startsWith('/') 
+      ? agendaPdfPath.substring(1) // Remover el / inicial
+      : agendaPdfPath;
+
+    setIsUploading(true);
+    try {
+      const response = await fetch('/api/agenda/upload-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          pdfPath: relativePath,
+          event_tracker: eventTrackerId,
+          replaceExisting: true, // Reemplazar la agenda existente
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Error al cargar el PDF');
+      }
+
+      toast({
+        title: "Agenda cargada exitosamente",
+        description: `Se procesaron ${result.total} eventos. ${result.saved} guardados, ${result.deleted} eventos anteriores eliminados.`,
+      });
+
+      refetch();
+      setIsUploadDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Ocurrió un error al cargar el PDF.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("¿Está seguro de que desea eliminar este evento?")) {
       return;
     }
 
     try {
-      const response = await fetch(`/api/events?eventId=${encodeURIComponent(id)}`, {
+      const response = await fetch(`/api/agenda?agendaId=${encodeURIComponent(id)}`, {
         method: 'DELETE',
       });
 
@@ -207,7 +307,7 @@ export function AgendaManagement() {
     }
   };
 
-  if (eventsLoading || speakersLoading) {
+  if (agendaLoading || speakersLoading || eventTrackersLoading) {
     return (
       <Card>
         <CardHeader>
@@ -222,13 +322,69 @@ export function AgendaManagement() {
   }
 
   return (
+    <>
+      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cargar Agenda desde PDF</DialogTitle>
+            <DialogDescription>
+              Se cargará automáticamente la agenda desde el archivo PDF ubicado en la carpeta del evento activo.
+              <br />
+              <strong>Nota:</strong> Esto reemplazará todos los eventos de agenda existentes del evento activo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              Evento activo: <strong>{activeEventTracker?.name || 'Ninguno'}</strong>
+            </p>
+            <Button
+              onClick={handleUploadPDF}
+              disabled={isUploading || !activeEventTracker}
+              className="w-full"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Procesando PDF...
+                </>
+              ) : (
+                <>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Cargar y Reemplazar Agenda
+                </>
+              )}
+            </Button>
+            {!activeEventTracker && (
+              <p className="text-sm text-destructive mt-2">
+                No hay un evento activo. Active un evento antes de cargar la agenda.
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Gestión de Agenda</CardTitle>
           <CardDescription>Ver, agregar o editar sesiones del evento.</CardDescription>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setIsUploadDialogOpen(true)}
+            size="sm"
+            variant="outline"
+            className="gap-1 h-12 text-base font-bold rounded-xl px-4"
+          >
+            <Upload className="h-4 w-4" />
+            Cargar PDF
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button
               onClick={() => handleOpenDialog()}
@@ -380,6 +536,47 @@ export function AgendaManagement() {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="specialty"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Especialidad</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej: Cardiología, Medicina Interna" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="event_tracker"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Evento Tracker</FormLabel>
+                      <Select 
+                        onValueChange={(value) => field.onChange(value === "none" ? undefined : value)} 
+                        value={field.value || "none"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccione un evento" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">Sin evento</SelectItem>
+                          {eventTrackers.map((et) => (
+                            <SelectItem key={et.id} value={et.id}>
+                              {et.name} {et.isActive && "(Activo)"}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={handleCloseDialog}>
                     Cancelar
@@ -395,6 +592,7 @@ export function AgendaManagement() {
             </Form>
           </DialogContent>
         </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
@@ -404,25 +602,34 @@ export function AgendaManagement() {
               <TableHead>Fecha</TableHead>
               <TableHead>Hora</TableHead>
               <TableHead>Ponentes</TableHead>
+              <TableHead>Especialidad</TableHead>
+              <TableHead>Evento</TableHead>
               <TableHead><span className="sr-only">Acciones</span></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {agendaItems.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   No hay eventos registrados.
                 </TableCell>
               </TableRow>
             ) : (
-              agendaItems.map((item) => (
+              agendaItems.map((item) => {
+                const eventTrackerId = item.event_tracker || item.eventTracker;
+                const eventTrackerName = eventTrackerId 
+                  ? eventTrackers.find(et => et.id === eventTrackerId)?.name || '-'
+                  : '-';
+                return (
                 <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.topic}</TableCell>
+                  <TableCell className="font-medium">{item.title || item.topic}</TableCell>
                   <TableCell>{item.date}</TableCell>
                   <TableCell>{item.startTime} - {item.endTime}</TableCell>
                   <TableCell>
                     {item.speakerIds.map(id => speakers.find(s => s.id === id)?.name).filter(Boolean).join(', ') || '-'}
                   </TableCell>
+                  <TableCell>{item.specialty || '-'}</TableCell>
+                  <TableCell>{eventTrackerName}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -447,11 +654,13 @@ export function AgendaManagement() {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))
+              );
+              })
             )}
           </TableBody>
         </Table>
       </CardContent>
     </Card>
+    </>
   );
 }

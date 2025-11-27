@@ -17,20 +17,26 @@ export interface Speaker {
   imageUrl: string;
   imageHint: string;
   qualifications?: string[];
+  specialization?: string; // Alias para specialty
+  event_tracker?: string; // ID del evento tracker
 }
 
 export interface AgendaItem {
   id: string;
+  title: string;
+  description: string;
   date: string;
   startTime: string;
   endTime: string;
-  topic: string;
+  topic?: string; // Mantener por compatibilidad, pero usar title
   speakerIds: string[];
   type?: 'session' | 'break' | 'meal' | 'welcome' | 'closing' | 'workshop' | 'qna';
   moderator?: string;
   location?: string;
   section?: string; // Sección temática (ej: "Riesgo CV", "Dislipidemia", etc.)
   participants?: string[]; // Participantes que no son speakers (ej: presentadores, anfitriones)
+  event_tracker?: string; // ID del evento tracker
+  specialty?: string; // Especialidad
 }
 
 export interface Question {
