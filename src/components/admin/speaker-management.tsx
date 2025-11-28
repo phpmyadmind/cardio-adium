@@ -40,13 +40,14 @@ import { PlusCircle, MoreHorizontal, Edit, Trash2, Upload, Loader2 } from "lucid
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { normalizeImageUrl } from "@/lib/image-utils";
 
 // Schema de validación para speakers
 const speakerSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
   specialty: z.string().min(1, "La especialidad es requerida"),
   bio: z.string().min(1, "La biografía es requerida"),
-  imageUrl: z.string().url("URL de imagen inválida").optional().or(z.literal("")),
+  imageUrl: z.string().optional().or(z.literal("")),
   imageHint: z.string().optional(),
   qualifications: z.array(z.string()).default([]),
   specialization: z.string().optional(),
@@ -136,7 +137,7 @@ export function SpeakerManagement() {
   const onSubmit = async (data: SpeakerFormValues) => {
     try {
       const speakerData = {
-        ...(editingSpeaker && { id: editingSpeaker.id }),
+        ...(editingSpeaker && { speakerId: editingSpeaker.speakerId }),
         name: data.name,
         specialty: data.specialty,
         bio: data.bio,
@@ -160,6 +161,10 @@ export function SpeakerManagement() {
 
       if (!response.ok) {
         const error = await response.json();
+        // Si el error es sobre un ID inválido, sugerir recargar la página
+        if (error.error && error.error.includes('ID de speaker inválido')) {
+          throw new Error(`${error.error} Por favor, recargue la página para obtener los IDs actualizados.`);
+        }
         throw new Error(error.error || 'Error al guardar el ponente');
       }
 
@@ -369,7 +374,7 @@ export function SpeakerManagement() {
                   name="imageUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>URL de Imagen</FormLabel>
+                      <FormLabel>URL de Imagen (Opcional)</FormLabel>
                       <FormControl>
                         <Input placeholder="https://ejemplo.com/imagen.jpg" {...field} />
                       </FormControl>
@@ -483,11 +488,11 @@ export function SpeakerManagement() {
                   ? (eventTrackerMap.get(speaker.event_tracker || speaker.event_tracker || '') || '-')
                   : '-';
                 return (
-                <TableRow key={speaker.id}>
+                <TableRow key={speaker.speakerId}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
                       <Avatar>
-                        <AvatarImage src={speaker.imageUrl} alt={speaker.name} />
+                        <AvatarImage src={normalizeImageUrl(speaker.imageUrl, speaker.name)} alt={speaker.name} />
                         <AvatarFallback>{speaker.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       {speaker.name}
@@ -510,7 +515,7 @@ export function SpeakerManagement() {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive"
-                          onClick={() => handleDelete(speaker.id)}
+                          onClick={() => handleDelete(speaker.speakerId)}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Eliminar

@@ -122,7 +122,7 @@ export function AgendaManagement() {
         location: event.location || "",
         section: event.section || "",
         participants: event.participants || [],
-        event_tracker: (event.event_tracker || event.eventTracker) || activeEventTracker?.id || "none",
+        event_tracker: event.event_tracker || activeEventTracker?.id || "none",
         specialty: event.specialty || "",
       });
     } else {
@@ -616,7 +616,7 @@ export function AgendaManagement() {
               </TableRow>
             ) : (
               agendaItems.map((item) => {
-                const eventTrackerId = item.event_tracker || item.eventTracker;
+                const eventTrackerId = item.event_tracker;
                 const eventTrackerName = eventTrackerId 
                   ? eventTrackers.find(et => et.id === eventTrackerId)?.name || '-'
                   : '-';
@@ -626,7 +626,7 @@ export function AgendaManagement() {
                   <TableCell>{item.date}</TableCell>
                   <TableCell>{item.startTime} - {item.endTime}</TableCell>
                   <TableCell>
-                    {item.speakerIds.map(id => speakers.find(s => s.id === id)?.name).filter(Boolean).join(', ') || '-'}
+                    {item.speakerIds.map(id => speakers.find(s => s.speakerId === id)?.name).filter(Boolean).join(', ') || '-'}
                   </TableCell>
                   <TableCell>{item.specialty || '-'}</TableCell>
                   <TableCell>{eventTrackerName}</TableCell>

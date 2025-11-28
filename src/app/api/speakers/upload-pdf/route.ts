@@ -77,12 +77,12 @@ export async function POST(request: NextRequest) {
           // Actualizar el speaker existente
           Object.assign(existingSpeaker, speakerData);
           await existingSpeaker.save();
-          savedSpeakers.push({ id: existingSpeaker._id.toString(), ...existingSpeaker.toObject(), action: 'updated' });
+          savedSpeakers.push({ speakerId: existingSpeaker._id.toString(), ...existingSpeaker.toObject(), action: 'updated' });
         } else {
           // Crear nuevo speaker
           const speaker = new Speaker(speakerData);
           await speaker.save();
-          savedSpeakers.push({ id: speaker._id.toString(), ...speaker.toObject(), action: 'created' });
+          savedSpeakers.push({ speakerId: speaker._id.toString(), ...speaker.toObject(), action: 'created' });
         }
       } catch (error: any) {
         errors.push({ name: speakerData.name, error: error.message });

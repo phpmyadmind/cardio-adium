@@ -8,6 +8,7 @@ import { Card, CardContent } from "./ui/card";
 import { QRCodeViewer } from "./qr-code-viewer";
 import { useAuthContext } from "@/contexts/auth.context";
 import { findEventLogo } from "@/lib/event-resources";
+import { normalizeImageUrl } from "@/lib/image-utils";
 
 interface EventTracker {
   id: string;
@@ -95,14 +96,14 @@ export function SpeakersView() {
       <div className="space-y-6">
         {speakers.map((speaker) => (
           <Card 
-            key={speaker.id} 
+            key={speaker.speakerId} 
             className="bg-white rounded-lg p-6 flex items-start gap-6 shadow-md hover:shadow-lg transition-shadow"
           >
             {/* Foto circular */}
             <div className="flex-shrink-0">
               <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-[#2E61FA]">
                 <Image
-                  src={speaker.imageUrl}
+                  src={normalizeImageUrl(speaker.imageUrl, speaker.name)}
                   alt={`Portrait of ${speaker.name}`}
                   fill
                   style={{ objectFit: 'cover' }}

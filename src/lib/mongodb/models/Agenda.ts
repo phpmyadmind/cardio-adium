@@ -15,6 +15,7 @@ export interface IAgenda extends Document {
   participants?: string[]; // Participantes
   event_tracker?: string; // ID del evento tracker (relación con EventTracker)
   specialty?: string; // Especialidad
+  pdfUrl?: string; // URL del PDF de la agenda para esta especialidad
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -70,6 +71,9 @@ const AgendaSchema = new Schema<IAgenda>(
       index: true,
     },
     specialty: {
+      type: String,
+    },
+    pdfUrl: {
       type: String,
     },
   },

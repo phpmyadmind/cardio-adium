@@ -10,7 +10,7 @@ export interface User {
 }
 
 export interface Speaker {
-  id: string;
+  speakerId: string;
   name: string;
   specialty: string;
   bio: string;
@@ -37,6 +37,7 @@ export interface AgendaItem {
   participants?: string[]; // Participantes que no son speakers (ej: presentadores, anfitriones)
   event_tracker?: string; // ID del evento tracker
   specialty?: string; // Especialidad
+  pdfUrl?: string; // URL del PDF de la agenda para esta especialidad
 }
 
 export interface Question {
