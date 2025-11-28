@@ -101,14 +101,31 @@ export function SpeakersView() {
           >
             {/* Foto circular */}
             <div className="flex-shrink-0">
-              <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-[#2E61FA]">
+              <div 
+                className="relative aspect-square rounded-full overflow-hidden border-4 border-[#2E61FA] bg-gray-100"
+                style={{ 
+                  width: 'clamp(80px, 12vw, 128px)',
+                  height: 'auto'
+                }}
+              >
                 <Image
                   src={normalizeImageUrl(speaker.imageUrl, speaker.name)}
                   alt={`Portrait of ${speaker.name}`}
                   fill
-                  style={{ objectFit: 'cover' }}
+                  sizes="(max-width: auto) auto, auto"
+                  style={{ 
+                    objectFit: 'fill',
+                    objectPosition: 'center',
+                    transform: 'scale(0.97)',
+                    transformOrigin: 'center'
+                  }}
                   data-ai-hint={speaker.imageHint}
                   className="rounded-full"
+                  onError={(e) => {
+                    // Si la imagen falla, ocultar para mostrar el fallback
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
                 />
               </div>
             </div>
