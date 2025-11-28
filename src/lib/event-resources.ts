@@ -70,11 +70,11 @@ export function getEventAgendaPDF(
 
 /**
  * Lista de nombres comunes de logos que se buscan en la carpeta del evento
- * Prioridad: Logo_123 (con extensiones comunes)
+ * Prioridad: Logo_123.png primero, luego otras extensiones
  */
 export const COMMON_LOGO_NAMES = [
-  'Logo_123.jpg',
   'Logo_123.png',
+  'Logo_123.jpg',
   'Logo_123.jpeg',
   'LOGO_123.png',
   'logo.png',
@@ -134,7 +134,7 @@ export async function findEventResource(
 
 /**
  * Obtiene el logo Logo_123 de la carpeta del evento (solo cliente)
- * Busca primero Logo_123.jpg, luego Logo_123.png, luego otros logos
+ * Busca primero Logo_123.png, luego Logo_123.jpg, luego otros logos
  * @param eventTrackerId - ID del evento tracker
  * @returns Ruta del logo o null si no se encuentra
  */

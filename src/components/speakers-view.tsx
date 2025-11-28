@@ -19,7 +19,7 @@ interface EventTracker {
 export function SpeakersView() {
   const { user } = useAuthContext();
   const { data: eventTrackers } = useMongoCollection<EventTracker>('/api/event-trackers');
-  const [logoPath, setLogoPath] = useState<string>('/Logo_123.jpg');
+  const [logoPath, setLogoPath] = useState<string>('/Logo_123.png');
 
   // Obtener el event_tracker del usuario o el evento activo
   const eventTrackerId = useMemo(() => {
@@ -49,10 +49,10 @@ export function SpeakersView() {
           setLogoPath(logo);
         } else {
           // Fallback: buscar Logo_123 en la carpeta del evento directamente
-          setLogoPath(`/${eventTrackerId}/Logo_123.jpg`);
+          setLogoPath(`/${eventTrackerId}/Logo_123.png`);
         }
       } else {
-        setLogoPath('/Logo_123.jpg');
+        setLogoPath('/Logo_123.png');
       }
     };
     loadLogo();
@@ -82,7 +82,7 @@ export function SpeakersView() {
               if (eventTrackerId) {
                 setLogoPath(`/${eventTrackerId}/Logo_123.png`);
               } else {
-                setLogoPath('/Logo_123.jpg');
+                setLogoPath('/Logo_123.png');
               }
             }}
           />

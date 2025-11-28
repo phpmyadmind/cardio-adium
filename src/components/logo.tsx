@@ -57,7 +57,7 @@ export function LogoHead({ className }: { className?: string }) {
           setLogoPath(logo);
         } else {
           // Fallback: buscar Logo_123 en la carpeta del evento directamente
-          setLogoPath(`/${eventTrackerId}/Logo_123.jpg`);
+          setLogoPath(`/${eventTrackerId}/Logo_123.png`);
         }
       } else {
         setLogoPath('/logo_adium.png');
