@@ -30,6 +30,10 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Convierte undefined a null para evitar "Bind parameters must not contain undefined"
+const toNull = (v) => (v === undefined ? null : v);
+const toEmpty = (v) => (v === undefined || v === null ? '' : v);
+
 router.post('/', async (req, res) => {
   try {
     const id = generateId();
@@ -37,7 +41,7 @@ router.post('/', async (req, res) => {
     const quals = qualifications ? JSON.stringify(qualifications) : '[]';
     await query(
       'INSERT INTO speakers (id, name, specialty, bio, image_url, image_hint, qualifications, event_tracker) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [id, name, specialty, bio, imageUrl, imageHint, quals, event_tracker || null]
+      [id, name, specialty, bio, toEmpty(imageUrl), toEmpty(imageHint), quals, toNull(event_tracker)]
     );
     res.status(201).json({ id, name, specialty, bio, imageUrl, imageHint, qualifications: qualifications || [], event_tracker });
   } catch (err) {
@@ -51,7 +55,7 @@ router.put('/:id', async (req, res) => {
     const quals = qualifications ? JSON.stringify(qualifications) : '[]';
     const result = await query(
       'UPDATE speakers SET name=?, specialty=?, bio=?, image_url=?, image_hint=?, qualifications=?, event_tracker=? WHERE id=?',
-      [name, specialty, bio, imageUrl, imageHint, quals, event_tracker || null, req.params.id]
+      [name, specialty, bio, toEmpty(imageUrl), toEmpty(imageHint), quals, toNull(event_tracker), req.params.id]
     );
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Speaker no encontrado' });
     res.json({ id: req.params.id, name, specialty, bio, imageUrl, imageHint, qualifications: qualifications || [], event_tracker });
