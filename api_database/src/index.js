@@ -6,7 +6,12 @@ const db = require('./config/db');
 const app = express();
 const PORT = parseInt(process.env.PORT, 10) || 5040;
 
-app.use(cors());
+app.use(cors({
+  origin: '*', // Permite cualquier origen
+  credentials: false, // Si usas cookies/sesiones, cambia a true
+  optionsSuccessStatus: 200
+}));
+
 app.use(express.json());
 
 async function start() {
