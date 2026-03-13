@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export function PDFViewer({ pdfUrl, title, className = '', height }) {
+export function PDFViewer({ pdfUrl, title, className = '', height, hideTitle }) {
   const [viewerHeight, setViewerHeight] = useState('800px');
 
   useEffect(() => {
@@ -9,10 +9,11 @@ export function PDFViewer({ pdfUrl, title, className = '', height }) {
       const windowHeight = window.innerHeight;
       const windowWidth = window.innerWidth;
       if (windowWidth < 640) {
-        const mobileHeight = Math.max(400, windowHeight * 0.7);
+        // Móvil: usar más del viewport para enfatizar el PDF
+        const mobileHeight = Math.max(450, windowHeight * 0.75);
         setViewerHeight(`${mobileHeight}px`);
       } else if (windowWidth < 768) {
-        const tabletHeight = Math.max(500, windowHeight * 0.75);
+        const tabletHeight = Math.max(550, windowHeight * 0.78);
         setViewerHeight(`${tabletHeight}px`);
       } else if (windowWidth < 1024) {
         setViewerHeight('700px');
@@ -38,14 +39,14 @@ export function PDFViewer({ pdfUrl, title, className = '', height }) {
 
   return (
     <div className={`w-full ${className}`}>
-      {title && (
+      {title && !hideTitle && (
         <div className="mb-4">
           <h3 className="text-lg sm:text-xl font-bold">{title}</h3>
         </div>
       )}
       <div
-        className="w-full border border-gray-200 rounded-lg overflow-hidden"
-        style={{ height: viewerHeight, minHeight: '400px', maxHeight: '90vh' }}
+        className="w-full border-0 sm:border border-gray-200 rounded-none sm:rounded-lg overflow-hidden"
+        style={{ height: viewerHeight, minHeight: '450px', maxHeight: '90vh' }}
       >
         <iframe
           src={`${fullPdfUrl}#toolbar=1`}

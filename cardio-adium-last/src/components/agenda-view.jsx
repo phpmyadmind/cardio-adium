@@ -87,65 +87,81 @@ export function AgendaView() {
   }, [selectedSpecialty, filteredAgendaItems]);
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col items-center mb-6">
-        <img
-          src={logoPath}
-          alt="Event Logo"
-          className="w-full max-w-md h-auto mb-4"
-          onError={() => {
-            if (eventTrackerId) {
-              setLogoPath(`/${eventTrackerId}/Logo_123.png`);
-            } else {
-              setLogoPath('/Logo_123.png');
-            }
-          }}
-        />
-      </div>
-      <div className="flex justify-end gap-2">
-        <QRCodeViewer viewName="agenda" label="Agenda" />
+    <div className="space-y-4 sm:space-y-6 md:space-y-8 pb-6 sm:pb-8 max-w-7xl mx-auto w-full">
+      {/* Header: logo + QR - compacto en móvil */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col items-center sm:items-start">
+          <img
+            src={logoPath}
+            alt="Event Logo"
+            className="w-full max-w-[200px] sm:max-w-[280px] md:max-w-md h-auto"
+            onError={() => {
+              if (eventTrackerId) {
+                setLogoPath(`/${eventTrackerId}/Logo_123.png`);
+              } else {
+                setLogoPath('/Logo_123.png');
+              }
+            }}
+          />
+        </div>
+        <div className="flex justify-center sm:justify-end">
+          <QRCodeViewer viewName="agenda" label="Agenda" />
+        </div>
       </div>
 
       {agendaItems.length > 0 && specialties.length > 0 && (
-        <div className="w-full mt-8">
-          <Tabs value={selectedSpecialty} onValueChange={setSelectedSpecialty} className="w-full">
-            <div className="flex items-center justify-between mb-6 gap-4">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 h-auto gap-2 bg-transparent p-0">
+        <Tabs value={selectedSpecialty} onValueChange={setSelectedSpecialty} className="w-full">
+          {/* Selector de especialidad + botón descargar - responsive */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="w-full overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+              <TabsList className="inline-flex w-max min-w-full sm:min-w-0 sm:w-auto h-auto gap-2 bg-transparent p-0 flex-nowrap sm:flex-wrap">
                 {specialties.map((specialty) => (
                   <TabsTrigger
                     key={specialty}
                     value={specialty}
-                    className="text-sm sm:text-base font-bold rounded-xl bg-[#2E61FA] hover:bg-[#365899] text-white shadow-md data-[state=active]:bg-[#2E61FA] data-[state=active]:text-white data-[state=active]:shadow-md py-2 px-3"
+                    className="text-xs sm:text-sm md:text-base font-bold rounded-xl bg-[#2E61FA] hover:bg-[#365899] text-white shadow-md data-[state=active]:bg-[#2E61FA] data-[state=active]:text-white data-[state=active]:shadow-md py-2 px-3 flex-shrink-0"
                   >
                     {specialty}
                   </TabsTrigger>
                 ))}
               </TabsList>
-              {selectedSpecialty && specialtyPdfUrl && (
-                <a
-                  href={`/${eventTrackerId || ''}${specialtyPdfUrl}`}
-                  download
-                  className="flex items-center gap-2 px-4 py-2 bg-[#2E61FA] hover:bg-[#365899] text-white rounded-lg font-semibold shadow-md transition-colors whitespace-nowrap"
-                >
-                  <Download className="h-4 w-4" />
-                  <span className="hidden sm:inline">Descargar PDF</span>
-                  <span className="sm:hidden">PDF</span>
-                </a>
-              )}
             </div>
-          </Tabs>
-        </div>
-      )}
+            {selectedSpecialty && specialtyPdfUrl && (
+              <a
+                href={`/${eventTrackerId || ''}${specialtyPdfUrl}`}
+                download
+                className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-[#2E61FA] hover:bg-[#365899] text-white rounded-lg font-semibold shadow-md transition-colors whitespace-nowrap flex-shrink-0"
+              >
+                <Download className="h-4 w-4" />
+                <span>Descargar PDF</span>
+              </a>
+            )}
+          </div>
 
-      {selectedSpecialty && specialtyPdfUrl && (
-        <div className="w-full mt-6">
-          <PDFViewer
-            pdfUrl={`/${eventTrackerId || ''}${specialtyPdfUrl}`}
-            title={`Agenda - ${selectedSpecialty}`}
-            height="800px"
-            className="mb-8"
-          />
-        </div>
+          {/* Sección principal: Agenda en PDF - enfatizada */}
+          {selectedSpecialty && specialtyPdfUrl && (
+            <div className="w-full">
+              <div className="mb-3 sm:mb-4">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-[#2E61FA] flex items-center gap-2">
+                  <span className="inline-block w-1 h-6 sm:h-8 bg-[#2E61FA] rounded-full" />
+                  Agenda en formato PDF
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Visualice la agenda de {selectedSpecialty} directamente en su dispositivo
+                </p>
+              </div>
+              <div className="w-full rounded-xl overflow-hidden border-2 border-[#2E61FA]/20 shadow-lg bg-white">
+                <PDFViewer
+                  pdfUrl={`/${eventTrackerId || ''}${specialtyPdfUrl}`}
+                  title={`Agenda - ${selectedSpecialty}`}
+                  height="800px"
+                  className="agenda-pdf-viewer"
+                  hideTitle
+                />
+              </div>
+            </div>
+          )}
+        </Tabs>
       )}
     </div>
   );

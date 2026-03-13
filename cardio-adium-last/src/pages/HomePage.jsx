@@ -46,7 +46,7 @@ export default function HomePage() {
             <p className="mt-2">
               <Link to="/terms" className="text-[#2E61FA] hover:underline font-medium">Política de Privacidad</Link>
               {' · '}
-              <span className="font-medium">CO-2500361</span>
+              <span className="font-medium">CO-2600050</span>
             </p>
           </div>
         </footer>

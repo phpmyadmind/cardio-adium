@@ -33,11 +33,13 @@ router.post('/', async (req, res) => {
   try {
     const id = generateId();
     const { userId, eventId, text, userName, speakerName } = req.body;
+    // Si user_id es null (usuario anónimo/no autenticado), generamos un GUID para cumplir con la restricción NOT NULL
+    const effectiveUserId = userId || generateId();
     await query(
       'INSERT INTO questions (id, user_id, event_id, text, user_name, speaker_name, is_approved, is_answered) VALUES (?, ?, ?, ?, ?, ?, 0, 0)',
-      [id, userId, eventId || null, text, userName || null, speakerName || null]
+      [id, effectiveUserId, eventId || null, text, userName || null, speakerName || null]
     );
-    res.status(201).json({ id, userId, eventId, text, userName, speakerName, isApproved: false, isAnswered: false });
+    res.status(201).json({ id, userId: effectiveUserId, eventId, text, userName, speakerName, isApproved: false, isAnswered: false });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

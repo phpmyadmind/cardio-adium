@@ -117,7 +117,7 @@ export default function ProfilePage() {
             6460505 Si usted conoce un evento adverso/incidente de nuestros medicamentos / dispositivos médicos, por
             favor reportarlo a farmacovigilancia@adium.com.co
           </p>
-          <p className="mt-2 font-medium">CO-2500362</p>
+          <p className="mt-2 font-medium">CO-2600050</p>
         </div>
       </footer>
     </div>
